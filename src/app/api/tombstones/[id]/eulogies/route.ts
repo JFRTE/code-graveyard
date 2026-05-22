@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const supabase = getSupabase()
   const { id } = await params
   const { data, error } = await supabase.from('eulogies').select('*').eq('tombstone_id', id).order('created_at', { ascending: false })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -14,7 +13,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const supabase = getSupabase()
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
