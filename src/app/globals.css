@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #030712;
+  --foreground: #f9fafb;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111827;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+@keyframes fog {
+  0%, 100% { opacity: 0.3; transform: translateX(0); }
+  50% { opacity: 0.6; transform: translateX(20px); }
+}
+
+.fog-effect {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(to top, rgba(75, 85, 99, 0.3), transparent);
+  pointer-events: none;
+  animation: fog 8s ease-in-out infinite;
+}
+
+.code-block {
+  background: #1a1a2e;
+  border: 1px solid #2d2d44;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #a855f7, #6366f1, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
