@@ -4,45 +4,32 @@
 let _supabase: any = null
 
 function createMockClient(): any {
-  // Return a proxy that chains methods and returns empty results
-  const handler: ProxyHandler<any> = {
+  // Create a chainable mock that always resolves with empty data
+  const chainable: any = new Proxy({}, {
+    get(target, prop) {
+      if (prop === 'then') {
+        // Make it thenable - resolves with empty data
+        return (resolve: any) => resolve({ data: [], error: null, count: 0 })
+      }
+      if (prop === 'single') {
+        return () => Promise.resolve({ data: null, error: null })
+      }
+      // All other methods return the chainable itself
+      return () => chainable
+    }
+  })
+
+  return new Proxy({}, {
     get(target, prop) {
       if (prop === 'from') {
-        return () => new Proxy({}, {
-          get(_, method) {
-            if (method === 'select') return () => new Proxy({}, {
-              get(_, m2) {
-                if (m2 === 'eq' || m2 === 'order' || m2 === 'range' || m2 === 'single') return () => Promise.resolve({ data: [], error: null, count: 0 })
-                if (m2 === 'then') return (resolve: any) => resolve({ data: [], error: null, count: 0 })
-                return () => Promise.resolve({ data: [], error: null, count: 0 })
-              }
-            })
-            if (method === 'insert') return () => new Proxy({}, {
-              get(_, m2) {
-                if (m2 === 'select') return () => new Proxy({}, {
-                  get(_, m3) {
-                    if (m3 === 'single') return () => Promise.resolve({ data: null, error: null })
-                    return () => Promise.resolve({ data: [], error: null })
-                  }
-                })
-                return () => Promise.resolve({ data: null, error: null })
-              }
-            })
-            if (method === 'delete') return () => new Proxy({}, {
-              get(_, m2) {
-                if (m2 === 'eq') return () => Promise.resolve({ data: null, error: null })
-                return () => Promise.resolve({ data: null, error: null })
-              }
-            })
-            return () => Promise.resolve({ data: [], error: null, count: 0 })
-          }
-        })
+        return () => chainable
       }
-      if (prop === 'rpc') return () => Promise.resolve({ data: null, error: null })
+      if (prop === 'rpc') {
+        return () => Promise.resolve({ data: null, error: null })
+      }
       return () => Promise.resolve({ data: null, error: null })
     }
-  }
-  return new Proxy({}, handler)
+  })
 }
 
 export function getSupabase() {
@@ -52,7 +39,6 @@ export function getSupabase() {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!url || !key) {
-    // Return mock client during build time - won't make any HTTP requests
     return createMockClient()
   }
 
