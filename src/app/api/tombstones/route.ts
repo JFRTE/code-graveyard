@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase()
   const { searchParams } = new URL(request.url)
   const page = parseInt(searchParams.get('page') || '1')
   const limit = parseInt(searchParams.get('limit') || '20')
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase()
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
