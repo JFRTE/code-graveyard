@@ -1,33 +1,33 @@
 // Lazy Supabase client - only creates a real client when env vars are available
-// During build time (no env vars), returns a no-op proxy that won't hang
-
 let _supabase: any = null
 
 function createMockClient(): any {
-  // Create a chainable mock that always resolves with empty data
-  const chainable: any = new Proxy({}, {
+  // Create a fully chainable mock that resolves with empty data
+  const mock: any = new Proxy(function() {}, {
+    apply: () => {
+      return mock
+    },
     get(target, prop) {
       if (prop === 'then') {
-        // Make it thenable - resolves with empty data
         return (resolve: any) => resolve({ data: [], error: null, count: 0 })
       }
       if (prop === 'single') {
-        return () => Promise.resolve({ data: null, error: null })
+        return () => ({ then: (resolve: any) => resolve({ data: null, error: null }) })
       }
-      // All other methods return the chainable itself
-      return () => chainable
+      // Every other property returns a function that returns the mock
+      return () => mock
     }
   })
 
   return new Proxy({}, {
     get(target, prop) {
       if (prop === 'from') {
-        return () => chainable
+        return () => mock
       }
       if (prop === 'rpc') {
-        return () => Promise.resolve({ data: null, error: null })
+        return () => ({ then: (resolve: any) => resolve({ data: null, error: null }) })
       }
-      return () => Promise.resolve({ data: null, error: null })
+      return () => ({ then: (resolve: any) => resolve({ data: null, error: null }) })
     }
   })
 }
