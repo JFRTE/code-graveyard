@@ -40,12 +40,15 @@ export default function BuryPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
+      const data = await res.json()
       if (!res.ok) {
-        const data = await res.json()
         throw new Error(data.error || '创建失败')
       }
-      const data = await res.json()
-      router.push(`/tombstone/${data.id}`)
+      if (data && data.id) {
+        router.push(`/tombstone/${data.id}`)
+      } else {
+        throw new Error('返回数据异常，请检查数据库是否已创建表')
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : '创建失败')
     } finally {
