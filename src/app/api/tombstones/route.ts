@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const page = parseInt(searchParams.get('page') || '1')
