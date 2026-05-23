@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, use } from 'react'
+import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { Skull, ArrowLeft, Flower2, MessageSquare, Calendar, Loader2, Send } from 'lucide-react'
@@ -8,8 +8,8 @@ import Link from 'next/link'
 import { Tombstone, Eulogy } from '@/types'
 import { CAUSE_OF_DEATH_LABELS } from '@/lib/constants'
 
-export default function TombstoneDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function TombstoneDetailPage({ params }: { params: { id: string } }) {
+  const id = params.id
   const { data: session } = useSession()
   const [tombstone, setTombstone] = useState<Tombstone | null>(null)
   const [eulogies, setEulogies] = useState<Eulogy[]>([])
