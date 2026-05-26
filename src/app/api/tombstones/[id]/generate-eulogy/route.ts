@@ -120,8 +120,11 @@ export async function POST(
     return NextResponse.json({ error: insertError.message }, { status: 500 })
   }
 
-  // Update eulogy count
-  await supabase.from('tombstones').update({ eulogy_count: (tombstone.eulogy_count || 0) + 1 }).eq('id', id)
+  // Update eulogy count (best effort)
+  try {
+    const { data: t } = await supabase.from('tombstones').select('eulogy_count').eq('id', id).single()
+    if (t) await supabase.from('tombstones').update({ eulogy_count: (t.eulogy_count || 0) + 1 }).eq('id', id)
+  } catch (_) {}
 
   return NextResponse.json(eulogy, { status: 201 })
 }

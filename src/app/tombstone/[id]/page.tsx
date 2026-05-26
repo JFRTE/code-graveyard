@@ -45,69 +45,52 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
   const [originalCode, setOriginalCode] = useState('')
 
   useEffect(() => {
-    fetchTombstone()
-    fetchEulogies()
-    checkFlowered()
-    checkCandled()
-    checkBookmarked()
-    trackView()
-  }, [id])
+    const controller = new AbortController()
+    const { signal } = controller
 
-  const fetchTombstone = async () => {
-    try {
-      const res = await fetch(`/api/tombstones/${id}`)
-      if (res.ok) {
-        const data = await res.json()
-        setTombstone(data)
-        setOriginalCode(data.code_content)
-        setEditData({
-          code_name: data.code_name,
-          code_content: data.code_content,
-          description: data.description || '',
-          language: data.language,
-          cause_of_death: data.cause_of_death,
-        })
+    const load = async () => {
+      try {
+        const [tombRes, eulRes] = await Promise.all([
+          fetch(`/api/tombstones/${id}`, { signal }),
+          fetch(`/api/tombstones/${id}/eulogies`, { signal }),
+        ])
+        if (signal.aborted) return
+
+        if (tombRes.ok) {
+          const data = await tombRes.json()
+          setTombstone(data)
+          setOriginalCode(data.code_content)
+          setEditData({
+            code_name: data.code_name,
+            code_content: data.code_content,
+            description: data.description || '',
+            language: data.language,
+            cause_of_death: data.cause_of_death,
+          })
+        }
+        if (eulRes.ok) setEulogies(await eulRes.json())
+
+        // Fire-and-forget secondary requests
+        if (session) {
+          Promise.all([
+            fetch(`/api/tombstones/${id}/flowers`, { signal }).then(r => r.ok ? r.json() : null).then(d => { if (d && !signal.aborted) setHasFlowered(d.hasFlowered) }),
+            fetch(`/api/tombstones/${id}/candles`, { signal }).then(r => r.ok ? r.json() : null).then(d => { if (d && !signal.aborted) setHasCandled(d.hasCandled) }),
+            fetch('/api/bookmarks', { signal }).then(r => r.ok ? r.json() : null).then(d => { if (d && !signal.aborted) setIsBookmarked((d.bookmarks || []).some((b: any) => b.id === id)) }),
+          ]).catch(() => {})
+        }
+
+        // Track view (fire and forget)
+        fetch(`/api/tombstones/${id}/view`, { method: 'POST' }).catch(() => {})
+      } catch (e: any) {
+        if (e.name !== 'AbortError') console.error(e)
+      } finally {
+        if (!signal.aborted) setLoading(false)
       }
-    } catch (e) { console.error(e) } finally { setLoading(false) }
-  }
+    }
 
-  const fetchEulogies = async () => {
-    try {
-      const res = await fetch(`/api/tombstones/${id}/eulogies`)
-      if (res.ok) setEulogies(await res.json())
-    } catch (e) { console.error(e) }
-  }
-
-  const checkFlowered = async () => {
-    try {
-      const res = await fetch(`/api/tombstones/${id}/flowers`)
-      if (res.ok) { const data = await res.json(); setHasFlowered(data.hasFlowered) }
-    } catch (e) { console.error(e) }
-  }
-
-  const checkCandled = async () => {
-    try {
-      const res = await fetch(`/api/tombstones/${id}/candles`)
-      if (res.ok) { const data = await res.json(); setHasCandled(data.hasCandled) }
-    } catch (e) { console.error(e) }
-  }
-
-  const checkBookmarked = async () => {
-    if (!session) return
-    try {
-      const res = await fetch('/api/bookmarks')
-      if (res.ok) {
-        const data = await res.json()
-        setIsBookmarked((data.bookmarks || []).some((b: any) => b.id === id))
-      }
-    } catch (e) { console.error(e) }
-  }
-
-  const trackView = async () => {
-    try {
-      await fetch(`/api/tombstones/${id}/view`, { method: 'POST' })
-    } catch (e) {}
-  }
+    load()
+    return () => controller.abort()
+  }, [id, session])
 
   const handleBookmark = async () => {
     if (!session || bookmarking) return

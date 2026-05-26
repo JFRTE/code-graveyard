@@ -38,65 +38,84 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, [searchInput])
 
+  // AbortController for race condition prevention
+  const abortRef = useCallback((() => {
+    let controller: AbortController | null = null
+    return {
+      abort: () => { controller?.abort(); controller = null },
+      signal: () => { controller = new AbortController(); return controller.signal },
+    }
+  })(), [])
+
   useEffect(() => {
-    fetchTombstones(1, true)
-    fetchStats()
+    abortRef.abort()
+    const signal = abortRef.signal()
+
+    const load = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams({ page: '1', limit: '12', sort })
+        if (search) params.set('search', search)
+        if (selectedCause) params.set('cause', selectedCause)
+        if (selectedLanguage) params.set('language', selectedLanguage)
+
+        const res = await fetch(`/api/tombstones?${params}`, { signal })
+        if (!res.ok) return
+        const data = await res.json()
+        if (signal.aborted) return
+
+        setTombstones(data.tombstones || [])
+        setHasMore((data.tombstones || []).length === 12)
+        setPage(1)
+      } catch (e: any) {
+        if (e.name !== 'AbortError') console.error(e)
+      } finally {
+        if (!signal.aborted) setLoading(false)
+      }
+    }
+
+    load()
+
+    // Also fetch stats (only on first load or filter change)
+    fetch('/api/stats', { signal })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && !signal.aborted) {
+          setStats({
+            total_tombstones: data.total || 0,
+            total_flowers: data.totalFlowers || 0,
+            total_eulogies: data.totalEulogies || 0,
+            top_causes: data.topCauses || [],
+          })
+        }
+      })
+      .catch(() => {})
+
+    return () => abortRef.abort()
   }, [search, selectedCause, selectedLanguage, sort])
 
-  const fetchStats = async () => {
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
     try {
-      const res = await fetch('/api/stats')
-      if (res.ok) {
-        const data = await res.json()
-        setStats({
-          total_tombstones: data.total || 0,
-          total_flowers: data.totalFlowers || 0,
-          total_eulogies: data.totalEulogies || 0,
-          top_causes: data.topCauses || [],
-        })
-      }
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  const fetchTombstones = async (pageNum: number, reset: boolean = false) => {
-    if (reset) setLoading(true)
-    else setLoadingMore(true)
-
-    try {
-      const params = new URLSearchParams({
-        page: pageNum.toString(),
-        limit: '12',
-        sort,
-      })
+      const nextPage = page + 1
+      const params = new URLSearchParams({ page: nextPage.toString(), limit: '12', sort })
       if (search) params.set('search', search)
       if (selectedCause) params.set('cause', selectedCause)
       if (selectedLanguage) params.set('language', selectedLanguage)
 
       const res = await fetch(`/api/tombstones?${params}`)
+      if (!res.ok) return
       const data = await res.json()
       const newTombstones = data.tombstones || []
 
-      if (reset) {
-        setTombstones(newTombstones)
-      } else {
-        setTombstones(prev => [...prev, ...newTombstones])
-      }
-
+      setTombstones(prev => [...prev, ...newTombstones])
       setHasMore(newTombstones.length === 12)
-      setPage(pageNum)
+      setPage(nextPage)
     } catch (e) {
       console.error(e)
     } finally {
-      setLoading(false)
       setLoadingMore(false)
-    }
-  }
-
-  const handleLoadMore = () => {
-    if (!loadingMore && hasMore) {
-      fetchTombstones(page + 1)
     }
   }
 

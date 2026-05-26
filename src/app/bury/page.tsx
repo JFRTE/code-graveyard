@@ -26,6 +26,7 @@ export default function BuryPage() {
     birth_date: '',
     death_date: new Date().toISOString().split('T')[0],
     description: '',
+    tags: '',
   })
 
   const languages = ['javascript', 'typescript', 'python', 'java', 'go', 'rust', 'c', 'cpp', 'csharp', 'php', 'ruby', 'swift', 'kotlin', 'html', 'css', 'sql', 'shell', 'other']
@@ -39,10 +40,14 @@ export default function BuryPage() {
 
     setLoading(true)
     try {
+      const submitData = {
+        ...form,
+        tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      }
       const res = await fetch('/api/tombstones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(submitData),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -139,6 +144,11 @@ export default function BuryPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">悼词 / 描述（可选）</label>
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="写点什么纪念这段代码..." rows={3} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">标签（可选，逗号分隔）</label>
+            <input type="text" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="前端, React, 实习生代码" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors" />
           </div>
 
           {error && <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-400/10 px-4 py-3 rounded-lg">{error}</div>}
