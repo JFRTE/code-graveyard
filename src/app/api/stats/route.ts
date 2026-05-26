@@ -49,7 +49,7 @@ export async function GET() {
     monthly.push({ month: `${d.getMonth() + 1}月`, count })
   }
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     total,
     totalFlowers,
     totalEulogies,
@@ -58,4 +58,6 @@ export async function GET() {
     topLanguages,
     monthly,
   })
+  response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
+  return response
 }

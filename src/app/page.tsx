@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Skull, Flower2, MessageSquare, TrendingUp, Search, Filter, ChevronDown, ArrowUpDown } from 'lucide-react'
 import TombstoneCard from '@/components/TombstoneCard'
+import { SkeletonGrid } from '@/components/Skeleton'
 import { Tombstone, GlobalStats } from '@/types'
 import { CAUSE_OF_DEATH_LABELS, CAUSE_OPTIONS } from '@/lib/constants'
 
@@ -228,10 +229,7 @@ export default function Home() {
       <section className="py-8 px-4">
         <div className="max-w-6xl mx-auto">
           {loading ? (
-            <div className="text-center py-20">
-              <div className="inline-block w-8 h-8 border-2 border-purple-600 dark:border-purple-400 border-t-transparent rounded-full animate-spin" />
-              <p className="text-gray-600 dark:text-gray-400 mt-4">加载中...</p>
-            </div>
+            <SkeletonGrid count={8} />
           ) : tombstones.length === 0 ? (
             <div className="text-center py-20">
               <Skull className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />

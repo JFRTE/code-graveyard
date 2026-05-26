@@ -48,7 +48,9 @@ export async function GET(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const { count } = await supabase.from('tombstones').select('*', { count: 'exact', head: true })
-  return NextResponse.json({ tombstones: data, total: count, page, limit, totalPages: Math.ceil((count || 0) / limit) })
+  const response = NextResponse.json({ tombstones: data, total: count, page, limit, totalPages: Math.ceil((count || 0) / limit) })
+  response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60')
+  return response
 }
 
 export async function POST(request: NextRequest) {

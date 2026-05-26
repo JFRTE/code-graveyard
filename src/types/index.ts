@@ -13,6 +13,8 @@ export interface Tombstone {
   flower_count: number
   eulogy_count: number
   candle_count: number
+  view_count: number
+  tags: string[]
   created_at: string
 }
 

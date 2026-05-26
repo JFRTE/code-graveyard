@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
-import { Skull, ArrowLeft, Flower2, MessageSquare, Calendar, Loader2, Send, Sparkles, Trash2, Edit3, X, Check } from 'lucide-react'
+import { Skull, ArrowLeft, Flower2, MessageSquare, Calendar, Loader2, Send, Sparkles, Trash2, Edit3, X, Check, Bookmark, BookmarkCheck, Eye, Flag, Tag } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Tombstone, Eulogy } from '@/types'
@@ -14,6 +14,8 @@ import BurialAnimation from '@/components/BurialAnimation'
 import { showToast } from '@/components/Toast'
 import CodeBlock from '@/components/CodeBlock'
 import DiffView from '@/components/DiffView'
+import ShareImageButton from '@/components/ShareImageButton'
+import { playFlowerSound } from '@/lib/sounds'
 
 export default function TombstoneDetailPage({ params }: { params: { id: string } }) {
   const id = params.id
@@ -30,6 +32,11 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
   const [submittingEulogy, setSubmittingEulogy] = useState(false)
   const [showBurial, setShowBurial] = useState(false)
   const [generatingAI, setGeneratingAI] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [bookmarking, setBookmarking] = useState(false)
+  const [showReport, setShowReport] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reporting, setReporting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState({ code_name: '', code_content: '', description: '', language: '', cause_of_death: '' })
   const [saving, setSaving] = useState(false)
@@ -42,6 +49,8 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
     fetchEulogies()
     checkFlowered()
     checkCandled()
+    checkBookmarked()
+    trackView()
   }, [id])
 
   const fetchTombstone = async () => {
@@ -83,6 +92,64 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
     } catch (e) { console.error(e) }
   }
 
+  const checkBookmarked = async () => {
+    if (!session) return
+    try {
+      const res = await fetch('/api/bookmarks')
+      if (res.ok) {
+        const data = await res.json()
+        setIsBookmarked((data.bookmarks || []).some((b: any) => b.id === id))
+      }
+    } catch (e) { console.error(e) }
+  }
+
+  const trackView = async () => {
+    try {
+      await fetch(`/api/tombstones/${id}/view`, { method: 'POST' })
+    } catch (e) {}
+  }
+
+  const handleBookmark = async () => {
+    if (!session || bookmarking) return
+    setBookmarking(true)
+    try {
+      if (isBookmarked) {
+        await fetch('/api/bookmarks', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tombstone_id: id }),
+        })
+        setIsBookmarked(false)
+        showToast('已取消收藏', 'success')
+      } else {
+        await fetch('/api/bookmarks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tombstone_id: id }),
+        })
+        setIsBookmarked(true)
+        showToast('收藏成功 ❤️', 'success')
+      }
+    } catch (e) { console.error(e) } finally { setBookmarking(false) }
+  }
+
+  const handleReport = async () => {
+    if (!session || !reportReason.trim() || reporting) return
+    setReporting(true)
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tombstone_id: id, reason: reportReason }),
+      })
+      if (res.ok) {
+        showToast('举报已提交', 'success')
+        setShowReport(false)
+        setReportReason('')
+      }
+    } catch (e) { console.error(e) } finally { setReporting(false) }
+  }
+
   const handleFlower = async () => {
     if (!session || hasFlowered || flowering) return
     setFlowering(true)
@@ -92,6 +159,7 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
         setHasFlowered(true)
         setTombstone(prev => prev ? { ...prev, flower_count: prev.flower_count + 1 } : null)
         showToast('献花成功 🌸', 'success')
+        playFlowerSound()
       }
     } catch (e) { console.error(e) } finally { setFlowering(false) }
   }
@@ -216,6 +284,29 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
     <div className="min-h-screen py-12 px-4">
       <BurialAnimation show={showBurial} onComplete={() => setShowBurial(false)} />
 
+      {/* Report Modal */}
+      {showReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowReport(false)}>
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">⚠️ 举报墓碑</h3>
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              placeholder="请描述举报原因..."
+              rows={4}
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-red-500 resize-none"
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button onClick={() => setShowReport(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg">取消</button>
+              <button onClick={handleReport} disabled={!reportReason.trim() || reporting} className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-gray-400 text-white rounded-lg flex items-center gap-2">
+                {reporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
+                提交举报
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -223,6 +314,26 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
           </Link>
           <div className="flex items-center gap-2">
             <ShareButton tombstoneId={tombstone.id} codeName={tombstone.code_name} />
+            <ShareImageButton tombstone={tombstone} />
+            {session && (
+              <>
+                <button
+                  onClick={handleBookmark}
+                  disabled={bookmarking}
+                  className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  title={isBookmarked ? '取消收藏' : '收藏'}
+                >
+                  {isBookmarked ? <BookmarkCheck className="w-4 h-4 text-amber-500" /> : <Bookmark className="w-4 h-4 text-gray-500" />}
+                </button>
+                <button
+                  onClick={() => setShowReport(!showReport)}
+                  className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  title="举报"
+                >
+                  <Flag className="w-4 h-4 text-red-400" />
+                </button>
+              </>
+            )}
             {isOwner && (
               <>
                 <button
@@ -336,6 +447,11 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
                   <img src={tombstone.avatar_url} alt={tombstone.username} className="w-6 h-6 rounded-full" loading="lazy" />
                   <span>埋葬者：{tombstone.username}</span>
                 </Link>
+                <span className="text-gray-400 dark:text-gray-600">·</span>
+                <span className="flex items-center gap-1 text-sm">
+                  <Eye className="w-4 h-4" />
+                  {tombstone.view_count || 0}
+                </span>
               </div>
               <div className="flex items-center justify-center gap-8 mt-8 pt-6 border-t border-gray-300 dark:border-gray-600">
                 <button onClick={handleFlower} disabled={!session || hasFlowered || flowering} className={`flex items-center gap-2 transition-all ${hasFlowered ? 'text-pink-600 dark:text-pink-400' : session ? 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 cursor-pointer' : 'text-gray-400 dark:text-gray-500 cursor-not-allowed'}`}>

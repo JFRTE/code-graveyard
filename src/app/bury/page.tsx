@@ -10,6 +10,7 @@ import { CAUSE_OPTIONS, CAUSE_OF_DEATH_LABELS } from '@/lib/constants'
 import { CauseOfDeath } from '@/types'
 import BurialAnimation from '@/components/BurialAnimation'
 import { showToast } from '@/components/Toast'
+import { playBurialSound } from '@/lib/sounds'
 
 export default function BuryPage() {
   const { data: session, status } = useSession()
@@ -49,6 +50,7 @@ export default function BuryPage() {
       }
       if (data && data.id) {
         setShowBurial(true)
+        playBurialSound()
         showToast('代码已安息 💀', 'success')
         setTimeout(() => {
           router.push(`/tombstone/${data.id}`)
