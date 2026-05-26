@@ -55,8 +55,11 @@ export async function POST(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Increment flower count
-  await supabase.rpc('increment_flower_count', { tid: params.id }).catch(() => {})
+  // Increment flower count (best effort)
+  try {
+    const { data: t } = await supabase.from('tombstones').select('flower_count').eq('id', params.id).single()
+    if (t) await supabase.from('tombstones').update({ flower_count: (t.flower_count || 0) + 1 }).eq('id', params.id)
+  } catch (_) {}
 
   // Create notification
   const { data: tombstone } = await supabase

@@ -121,10 +121,7 @@ export async function POST(
   }
 
   // Update eulogy count
-  await supabase.rpc('increment_counter', { table_name: 'tombstones', row_id: id, column_name: 'eulogy_count' }).catch(() => {
-    // If RPC doesn't exist, manually update
-    supabase.from('tombstones').update({ eulogy_count: (tombstone.eulogy_count || 0) + 1 }).eq('id', id)
-  })
+  await supabase.from('tombstones').update({ eulogy_count: (tombstone.eulogy_count || 0) + 1 }).eq('id', id)
 
   return NextResponse.json(eulogy, { status: 201 })
 }

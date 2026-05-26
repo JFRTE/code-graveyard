@@ -48,10 +48,11 @@ export async function POST(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Update tombstone eulogy count
-  await supabase.rpc('increment_eulogy_count', { tid: params.id }).catch(() => {
-    supabase.from('tombstones').update({ eulogy_count: supabase.rpc ? 1 : 1 }).eq('id', params.id)
-  })
+  // Update tombstone eulogy count (best effort)
+  try {
+    const { data: t } = await supabase.from('tombstones').select('eulogy_count').eq('id', params.id).single()
+    if (t) await supabase.from('tombstones').update({ eulogy_count: (t.eulogy_count || 0) + 1 }).eq('id', params.id)
+  } catch (_) {}
 
   // Create notification for tombstone owner
   const { data: tombstone } = await supabase
