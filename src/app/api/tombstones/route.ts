@@ -14,9 +14,28 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search')
   const cause = searchParams.get('cause')
   const language = searchParams.get('language')
+  const sort = searchParams.get('sort') || 'newest'
   const offset = (page - 1) * limit
 
-  let query = supabase.from('tombstones').select('*').order('created_at', { ascending: false })
+  let query = supabase.from('tombstones').select('*')
+
+  // Sorting
+  switch (sort) {
+    case 'popular':
+      query = query.order('flower_count', { ascending: false })
+      break
+    case 'eulogies':
+      query = query.order('eulogy_count', { ascending: false })
+      break
+    case 'candles':
+      query = query.order('candle_count', { ascending: false })
+      break
+    case 'oldest':
+      query = query.order('created_at', { ascending: true })
+      break
+    default: // newest
+      query = query.order('created_at', { ascending: false })
+  }
 
   if (userId) query = query.eq('user_id', userId)
   if (search) query = query.or(`code_name.ilike.%${search}%,description.ilike.%${search}%`)

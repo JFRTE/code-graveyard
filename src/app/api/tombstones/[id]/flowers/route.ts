@@ -5,29 +5,76 @@ import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const supabase = getSupabase()
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: '请先登录' }, { status: 401 })
-
-  const { id } = await params
-
-  const { data: existing } = await supabase.from('flowers').select('id').eq('tombstone_id', id).eq('user_id', session.user.id).single()
-  if (existing) return NextResponse.json({ error: '你已经献过花了' }, { status: 400 })
-
-  const { error } = await supabase.from('flowers').insert({ tombstone_id: id, user_id: session.user.id })
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  await supabase.rpc('increment_flower_count', { tombstone_id_param: id })
-  return NextResponse.json({ message: '献花成功' }, { status: 201 })
-}
-
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const supabase = getSupabase()
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ hasFlowered: false })
 
-  const { id } = await params
-  const { data } = await supabase.from('flowers').select('id').eq('tombstone_id', id).eq('user_id', session.user.id).single()
-  return NextResponse.json({ hasFlowered: !!data })
+  const supabase = getSupabase()
+  const { data } = await supabase
+    .from('flowers')
+    .select('id')
+    .eq('tombstone_id', params.id)
+    .eq('user_id', session.user.id)
+    .limit(1)
+
+  return NextResponse.json({ hasFlowered: (data?.length || 0) > 0 })
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user) return NextResponse.json({ error: '请先登录' }, { status: 401 })
+
+  const supabase = getSupabase()
+
+  // Check if already flowered
+  const { data: existing } = await supabase
+    .from('flowers')
+    .select('id')
+    .eq('tombstone_id', params.id)
+    .eq('user_id', session.user.id)
+    .limit(1)
+
+  if (existing && existing.length > 0) {
+    return NextResponse.json({ error: '已经献过花了' }, { status: 409 })
+  }
+
+  const { data, error } = await supabase
+    .from('flowers')
+    .insert({
+      tombstone_id: params.id,
+      user_id: session.user.id,
+    })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Increment flower count
+  await supabase.rpc('increment_flower_count', { tid: params.id }).catch(() => {})
+
+  // Create notification
+  const { data: tombstone } = await supabase
+    .from('tombstones')
+    .select('user_id, code_name')
+    .eq('id', params.id)
+    .single()
+
+  if (tombstone && tombstone.user_id !== session.user.id) {
+    await supabase.from('notifications').insert({
+      user_id: tombstone.user_id,
+      type: 'flower',
+      from_username: session.user.name || 'Anonymous',
+      from_avatar_url: session.user.image || '',
+      tombstone_id: params.id,
+      tombstone_name: tombstone.code_name,
+    }).catch(() => {})
+  }
+
+  return NextResponse.json(data, { status: 201 })
 }

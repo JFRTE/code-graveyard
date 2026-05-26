@@ -1,0 +1,81 @@
+{
+  "site": {
+    "title": "代码火葬场",
+    "subtitle": "每段代码都值得一个体面的葬礼"
+  },
+  "nav": {
+    "bury": "埋葬代码",
+    "myGraveyard": "我的墓地",
+    "login": "GitHub 登录",
+    "notifications": "通知",
+    "activity": "活动时间线",
+    "leaderboard": "排行榜",
+    "stats": "数据统计",
+    "random": "随机挖坟"
+  },
+  "home": {
+    "search": "搜索代码名称、描述...",
+    "filter": "筛选",
+    "sort": "排序",
+    "sortNewest": "最新",
+    "sortOldest": "最早",
+    "sortPopular": "最多献花",
+    "sortEulogies": "最多悼词",
+    "sortCandles": "最多蜡烛",
+    "cause": "死因",
+    "language": "编程语言",
+    "allCauses": "全部死因",
+    "allLanguages": "全部语言",
+    "loadMore": "加载更多",
+    "loading": "加载中...",
+    "noTombstones": "没有找到墓碑",
+    "tryOther": "试试其他搜索条件"
+  },
+  "stats": {
+    "tombstones": "代码已埋葬",
+    "flowers": "鲜花已献上",
+    "eulogies": "悼词已写下",
+    "topCause": "最热门死因",
+    "causeDistribution": "死因分布",
+    "langDistribution": "编程语言分布",
+    "monthlyTrend": "近 12 个月埋葬趋势"
+  },
+  "tombstone": {
+    "back": "返回墓地",
+    "rip": "R.I.P",
+    "buriedBy": "埋葬者：",
+    "flower": "献花",
+    "flowered": "已献花",
+    "eulogy": "悼词",
+    "candle": "蜡烛",
+    "codeBody": "代码遗体",
+    "language": "语言：",
+    "writeEulogy": "写一段悼词...",
+    "publishEulogy": "发表悼词",
+    "aiEulogy": "AI 写悼词",
+    "edit": "编辑墓碑",
+    "delete": "删除墓碑",
+    "deleteConfirm": "确定删除这个墓碑？此操作不可撤销！",
+    "viewDiff": "查看 Diff",
+    "hideDiff": "隐藏 Diff"
+  },
+  "notifications": {
+    "title": "通知",
+    "unread": "条未读",
+    "markAllRead": "全部已读",
+    "empty": "没有通知",
+    "emptyDesc": "当有人给你墓碑献花、写悼词时会通知你"
+  },
+  "activity": {
+    "title": "活动时间线",
+    "subtitle": "墓地里的最新动态 🕊️"
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确定",
+    "loading": "加载中...",
+    "success": "成功",
+    "error": "失败"
+  }
+}

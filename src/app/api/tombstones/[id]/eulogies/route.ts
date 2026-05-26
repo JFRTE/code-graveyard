@@ -5,35 +5,105 @@ import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// Get eulogies
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const supabase = getSupabase()
-  const { id } = await params
-  const { data, error } = await supabase.from('eulogies').select('*').eq('tombstone_id', id).order('created_at', { ascending: false })
+  const { data, error } = await supabase
+    .from('eulogies')
+    .select('*')
+    .eq('tombstone_id', params.id)
+    .order('created_at', { ascending: false })
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const supabase = getSupabase()
+// Post eulogy
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
-  const { id } = await params
+  const supabase = getSupabase()
   const body = await request.json()
-  const { content } = body
 
-  if (!content?.trim()) return NextResponse.json({ error: '悼词不能为空' }, { status: 400 })
+  if (!body.content?.trim()) return NextResponse.json({ error: '内容不能为空' }, { status: 400 })
 
-  const { data, error } = await supabase.from('eulogies').insert({
-    tombstone_id: id,
-    user_id: session.user.id,
-    username: session.user.name || 'Anonymous',
-    avatar_url: session.user.image || '',
-    content: content.trim(),
-  }).select().single()
+  const { data, error } = await supabase
+    .from('eulogies')
+    .insert({
+      tombstone_id: params.id,
+      user_id: session.user.id,
+      username: session.user.name || 'Anonymous',
+      avatar_url: session.user.image || '',
+      content: body.content,
+    })
+    .select()
+    .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  await supabase.rpc('increment_eulogy_count', { tombstone_id_param: id })
+  // Update tombstone eulogy count
+  await supabase.rpc('increment_eulogy_count', { tid: params.id }).catch(() => {
+    supabase.from('tombstones').update({ eulogy_count: supabase.rpc ? 1 : 1 }).eq('id', params.id)
+  })
+
+  // Create notification for tombstone owner
+  const { data: tombstone } = await supabase
+    .from('tombstones')
+    .select('user_id, code_name')
+    .eq('id', params.id)
+    .single()
+
+  if (tombstone && tombstone.user_id !== session.user.id) {
+    await supabase.from('notifications').insert({
+      user_id: tombstone.user_id,
+      type: 'eulogy',
+      from_username: session.user.name || 'Anonymous',
+      from_avatar_url: session.user.image || '',
+      tombstone_id: params.id,
+      tombstone_name: tombstone.code_name,
+    }).catch(() => {}) // Ignore if notifications table doesn't exist
+  }
+
   return NextResponse.json(data, { status: 201 })
+}
+
+// Delete eulogy
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user) return NextResponse.json({ error: '请先登录' }, { status: 401 })
+
+  const supabase = getSupabase()
+  const { searchParams } = new URL(request.url)
+  const eulogyId = searchParams.get('eulogyId')
+
+  if (!eulogyId) return NextResponse.json({ error: '缺少悼词ID' }, { status: 400 })
+
+  // Check ownership of the eulogy
+  const { data: existing } = await supabase
+    .from('eulogies')
+    .select('user_id')
+    .eq('id', eulogyId)
+    .single()
+
+  if (!existing || existing.user_id !== session.user.id) {
+    return NextResponse.json({ error: '无权删除' }, { status: 403 })
+  }
+
+  const { error } = await supabase
+    .from('eulogies')
+    .delete()
+    .eq('id', eulogyId)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
 }

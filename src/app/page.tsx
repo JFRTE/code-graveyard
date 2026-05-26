@@ -1,11 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Skull, Flower2, MessageSquare, TrendingUp, Search, Filter, ChevronDown } from 'lucide-react'
+import { Skull, Flower2, MessageSquare, TrendingUp, Search, Filter, ChevronDown, ArrowUpDown } from 'lucide-react'
 import TombstoneCard from '@/components/TombstoneCard'
 import { Tombstone, GlobalStats } from '@/types'
 import { CAUSE_OF_DEATH_LABELS, CAUSE_OPTIONS } from '@/lib/constants'
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: '最新' },
+  { value: 'oldest', label: '最早' },
+  { value: 'popular', label: '最多献花' },
+  { value: 'eulogies', label: '最多悼词' },
+  { value: 'candles', label: '最多蜡烛' },
+]
 
 export default function Home() {
   const [tombstones, setTombstones] = useState<Tombstone[]>([])
@@ -17,40 +25,35 @@ export default function Home() {
   const [search, setSearch] = useState('')
   const [selectedCause, setSelectedCause] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState('')
+  const [sort, setSort] = useState('newest')
   const [showFilters, setShowFilters] = useState(false)
 
   const languages = ['', 'javascript', 'typescript', 'python', 'java', 'go', 'rust', 'c', 'cpp', 'php', 'ruby', 'swift', 'kotlin', 'html', 'css', 'sql', 'shell', 'other']
 
+  // Debounced search
+  const [searchInput, setSearchInput] = useState('')
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
   useEffect(() => {
     fetchTombstones(1, true)
     fetchStats()
-  }, [search, selectedCause, selectedLanguage])
+  }, [search, selectedCause, selectedLanguage, sort])
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('/api/tombstones?limit=1000')
-      const data = await res.json()
-      const all = data.tombstones || []
-
-      const totalFlowers = all.reduce((sum: number, t: Tombstone) => sum + t.flower_count, 0)
-      const totalEulogies = all.reduce((sum: number, t: Tombstone) => sum + t.eulogy_count, 0)
-
-      const causeCounts: Record<string, number> = {}
-      all.forEach((t: Tombstone) => {
-        causeCounts[t.cause_of_death] = (causeCounts[t.cause_of_death] || 0) + 1
-      })
-
-      const topCauses = Object.entries(causeCounts)
-        .map(([cause, count]) => ({ cause, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5)
-
-      setStats({
-        total_tombstones: data.total || 0,
-        total_flowers: totalFlowers,
-        total_eulogies: totalEulogies,
-        top_causes: topCauses,
-      })
+      const res = await fetch('/api/stats')
+      if (res.ok) {
+        const data = await res.json()
+        setStats({
+          total_tombstones: data.total || 0,
+          total_flowers: data.totalFlowers || 0,
+          total_eulogies: data.totalEulogies || 0,
+          top_causes: data.topCauses || [],
+        })
+      }
     } catch (e) {
       console.error(e)
     }
@@ -64,6 +67,7 @@ export default function Home() {
       const params = new URLSearchParams({
         page: pageNum.toString(),
         limit: '12',
+        sort,
       })
       if (search) params.set('search', search)
       if (selectedCause) params.set('cause', selectedCause)
@@ -136,7 +140,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* Search & Filter */}
+      {/* Search, Filter & Sort */}
       <section className="py-4 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -145,11 +149,25 @@ export default function Home() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="搜索代码名称、描述..."
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
               />
+            </div>
+
+            {/* Sort */}
+            <div className="relative">
+              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                className="pl-10 pr-8 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none cursor-pointer"
+              >
+                {SORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
             </div>
 
             {/* Filter Toggle */}
@@ -172,7 +190,6 @@ export default function Home() {
               className="mt-3 p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Cause Filter */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">死因</label>
                   <select
@@ -188,7 +205,6 @@ export default function Home() {
                   </select>
                 </div>
 
-                {/* Language Filter */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">编程语言</label>
                   <select
@@ -230,7 +246,6 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Load More */}
               {hasMore && (
                 <div className="text-center mt-12">
                   <button

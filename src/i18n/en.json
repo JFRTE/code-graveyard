@@ -1,0 +1,81 @@
+{
+  "site": {
+    "title": "Code Graveyard",
+    "subtitle": "Every line of code deserves a decent funeral"
+  },
+  "nav": {
+    "bury": "Bury Code",
+    "myGraveyard": "My Graveyard",
+    "login": "GitHub Login",
+    "notifications": "Notifications",
+    "activity": "Activity",
+    "leaderboard": "Leaderboard",
+    "stats": "Statistics",
+    "random": "Random"
+  },
+  "home": {
+    "search": "Search code name, description...",
+    "filter": "Filter",
+    "sort": "Sort",
+    "sortNewest": "Newest",
+    "sortOldest": "Oldest",
+    "sortPopular": "Most Flowers",
+    "sortEulogies": "Most Eulogies",
+    "sortCandles": "Most Candles",
+    "cause": "Cause",
+    "language": "Language",
+    "allCauses": "All Causes",
+    "allLanguages": "All Languages",
+    "loadMore": "Load More",
+    "loading": "Loading...",
+    "noTombstones": "No tombstones found",
+    "tryOther": "Try different search criteria"
+  },
+  "stats": {
+    "tombstones": "Tombstones",
+    "flowers": "Flowers",
+    "eulogies": "Eulogies",
+    "topCause": "Top Cause",
+    "causeDistribution": "Cause Distribution",
+    "langDistribution": "Language Distribution",
+    "monthlyTrend": "Last 12 Months Trend"
+  },
+  "tombstone": {
+    "back": "Back to Graveyard",
+    "rip": "R.I.P",
+    "buriedBy": "Buried by: ",
+    "flower": "Flower",
+    "flowered": "Flowered",
+    "eulogy": "Eulogy",
+    "candle": "Candle",
+    "codeBody": "Code Remains",
+    "language": "Language: ",
+    "writeEulogy": "Write a eulogy...",
+    "publishEulogy": "Publish",
+    "aiEulogy": "AI Eulogy",
+    "edit": "Edit Tombstone",
+    "delete": "Delete Tombstone",
+    "deleteConfirm": "Are you sure you want to delete this tombstone? This cannot be undone!",
+    "viewDiff": "View Diff",
+    "hideDiff": "Hide Diff"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unread": "unread",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications",
+    "emptyDesc": "You'll be notified when someone flowers or writes eulogies for your tombstones"
+  },
+  "activity": {
+    "title": "Activity Timeline",
+    "subtitle": "Latest updates from the graveyard 🕊️"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error"
+  }
+}

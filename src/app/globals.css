@@ -122,3 +122,50 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Syntax highlighting colors */
+.code-keyword {
+  color: #c792ea;
+  font-weight: 600;
+}
+
+.code-string {
+  color: #c3e88d;
+}
+
+.code-comment {
+  color: #676e95;
+  font-style: italic;
+}
+
+.code-number {
+  color: #f78c6c;
+}
+
+.code-function {
+  color: #82aaff;
+}
+
+/* Selection highlight */
+::selection {
+  background: rgba(168, 85, 247, 0.3);
+}
+
+.dark ::selection {
+  background: rgba(168, 85, 247, 0.4);
+}
+
+/* Smooth transitions for theme */
+* {
+  transition-property: background-color, border-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-in-out;
+}
+
+/* Override for animations */
+.animate-spin,
+.animate-bounce,
+.fog-effect,
+.particle {
+  transition: none !important;
+}

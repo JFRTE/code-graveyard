@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
 import ToastContainer from "@/components/Toast";
 import Particles from "@/components/Particles";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "代码火葬场 - Code Graveyard",
@@ -14,6 +15,20 @@ export const metadata: Metadata = {
     icon: "/icons/icon.svg",
     apple: "/icons/icon.svg",
   },
+  openGraph: {
+    title: "代码火葬场 - Code Graveyard",
+    description: "一个专门用来埋葬代码的地方。每段代码都值得一个体面的葬礼。⚰️",
+    url: "https://code-graveyard.vercel.app",
+    siteName: "代码火葬场",
+    type: "website",
+    locale: "zh_CN",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "代码火葬场 - Code Graveyard",
+    description: "一个专门用来埋葬代码的地方。每段代码都值得一个体面的葬礼。⚰️",
+  },
+  metadataBase: new URL("https://code-graveyard.vercel.app"),
 };
 
 export const viewport: Viewport = {
@@ -33,7 +48,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SessionProvider>
             <Particles />
             <Navbar />
-            <main className="pt-16 relative z-[2]">{children}</main>
+            <main className="pt-16 relative z-[2]">
+              <ErrorBoundary>{children}</ErrorBoundary>
+            </main>
             <div className="fog-effect" />
             <ToastContainer />
           </SessionProvider>

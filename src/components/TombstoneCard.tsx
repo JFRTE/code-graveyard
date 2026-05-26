@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Flower2, MessageSquare, Calendar } from 'lucide-react'
+import { Flower2, MessageSquare, Calendar, Flame } from 'lucide-react'
 import Link from 'next/link'
 import { Tombstone } from '@/types'
 import { CAUSE_OF_DEATH_LABELS } from '@/lib/constants'
@@ -38,6 +38,10 @@ export default function TombstoneCard({ tombstone, index = 0 }: TombstoneCardPro
                 <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                   <MessageSquare className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                   <span>{tombstone.eulogy_count}</span>
+                </div>
+                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                  <Flame className="w-4 h-4 text-yellow-500 dark:text-yellow-400" />
+                  <span>{tombstone.candle_count || 0}</span>
                 </div>
               </div>
             </div>
