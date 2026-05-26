@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SessionProvider } from "@/components/SessionProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
@@ -10,13 +11,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-CN">
-      <body className="min-h-screen bg-gray-950">
-        <SessionProvider>
-          <Navbar />
-          <main className="pt-16">{children}</main>
-          <div className="fog-effect" />
-        </SessionProvider>
+    <html lang="zh-CN" suppressHydrationWarning>
+      <body className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+        <ThemeProvider>
+          <SessionProvider>
+            <Navbar />
+            <main className="pt-16">{children}</main>
+            <div className="fog-effect" />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
