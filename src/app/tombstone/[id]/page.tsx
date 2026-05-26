@@ -3,10 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
-import { Skull, ArrowLeft, Flower2, MessageSquare, Calendar, Loader2, Send } from 'lucide-react'
+import { Skull, ArrowLeft, Flower2, MessageSquare, Calendar, Loader2, Send, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { Tombstone, Eulogy } from '@/types'
 import { CAUSE_OF_DEATH_LABELS } from '@/lib/constants'
+import ShareButton from '@/components/ShareButton'
+import Candle from '@/components/Candle'
+import BurialAnimation from '@/components/BurialAnimation'
+import { showToast } from '@/components/Toast'
 
 export default function TombstoneDetailPage({ params }: { params: { id: string } }) {
   const id = params.id
@@ -16,13 +20,18 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
   const [loading, setLoading] = useState(true)
   const [hasFlowered, setHasFlowered] = useState(false)
   const [flowering, setFlowering] = useState(false)
+  const [hasCandled, setHasCandled] = useState(false)
+  const [candling, setCandling] = useState(false)
   const [eulogyContent, setEulogyContent] = useState('')
   const [submittingEulogy, setSubmittingEulogy] = useState(false)
+  const [showBurial, setShowBurial] = useState(false)
+  const [generatingAI, setGeneratingAI] = useState(false)
 
   useEffect(() => {
     fetchTombstone()
     fetchEulogies()
     checkFlowered()
+    checkCandled()
   }, [id])
 
   const fetchTombstone = async () => {
@@ -46,13 +55,37 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
     } catch (e) { console.error(e) }
   }
 
+  const checkCandled = async () => {
+    try {
+      const res = await fetch(`/api/tombstones/${id}/candles`)
+      if (res.ok) { const data = await res.json(); setHasCandled(data.hasCandled) }
+    } catch (e) { console.error(e) }
+  }
+
   const handleFlower = async () => {
     if (!session || hasFlowered || flowering) return
     setFlowering(true)
     try {
       const res = await fetch(`/api/tombstones/${id}/flowers`, { method: 'POST' })
-      if (res.ok) { setHasFlowered(true); setTombstone(prev => prev ? { ...prev, flower_count: prev.flower_count + 1 } : null) }
+      if (res.ok) {
+        setHasFlowered(true)
+        setTombstone(prev => prev ? { ...prev, flower_count: prev.flower_count + 1 } : null)
+        showToast('献花成功 🌸', 'success')
+      }
     } catch (e) { console.error(e) } finally { setFlowering(false) }
+  }
+
+  const handleCandle = async () => {
+    if (!session || hasCandled || candling) return
+    setCandling(true)
+    try {
+      const res = await fetch(`/api/tombstones/${id}/candles`, { method: 'POST' })
+      if (res.ok) {
+        setHasCandled(true)
+        setTombstone(prev => prev ? { ...prev, candle_count: (prev.candle_count || 0) + 1 } : null)
+        showToast('点蜡烛成功 🕯️', 'success')
+      }
+    } catch (e) { console.error(e) } finally { setCandling(false) }
   }
 
   const handleEulogy = async (e: React.FormEvent) => {
@@ -61,8 +94,36 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
     setSubmittingEulogy(true)
     try {
       const res = await fetch(`/api/tombstones/${id}/eulogies`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: eulogyContent }) })
-      if (res.ok) { const newEulogy = await res.json(); setEulogies(prev => [newEulogy, ...prev]); setEulogyContent(''); setTombstone(prev => prev ? { ...prev, eulogy_count: prev.eulogy_count + 1 } : null) }
+      if (res.ok) {
+        const newEulogy = await res.json()
+        setEulogies(prev => [newEulogy, ...prev])
+        setEulogyContent('')
+        setTombstone(prev => prev ? { ...prev, eulogy_count: prev.eulogy_count + 1 } : null)
+        showToast('悼词发表成功 💬', 'success')
+      }
     } catch (e) { console.error(e) } finally { setSubmittingEulogy(false) }
+  }
+
+  const handleGenerateAI = async () => {
+    if (!session || generatingAI) return
+    setGeneratingAI(true)
+    try {
+      const res = await fetch(`/api/tombstones/${id}/generate-eulogy`, { method: 'POST' })
+      if (res.ok) {
+        const newEulogy = await res.json()
+        setEulogies(prev => [newEulogy, ...prev])
+        setTombstone(prev => prev ? { ...prev, eulogy_count: prev.eulogy_count + 1 } : null)
+        showToast('AI 悼词生成成功 🤖✨', 'success')
+      } else {
+        const data = await res.json()
+        showToast(data.error || '生成失败', 'error')
+      }
+    } catch (e) {
+      console.error(e)
+      showToast('生成失败，请重试', 'error')
+    } finally {
+      setGeneratingAI(false)
+    }
   }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 text-purple-600 dark:text-purple-400 animate-spin" /></div>
@@ -72,13 +133,20 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
 
   return (
     <div className="min-h-screen py-12 px-4">
+      <BurialAnimation show={showBurial} onComplete={() => setShowBurial(false)} />
+
       <div className="max-w-4xl mx-auto">
-        <Link href="/" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-8 transition-colors"><ArrowLeft className="w-4 h-4" /> 返回墓地</Link>
+        <div className="flex items-center justify-between mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <ArrowLeft className="w-4 h-4" /> 返回墓地
+          </Link>
+          <ShareButton tombstoneId={tombstone.id} codeName={tombstone.code_name} />
+        </div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative">
           <div className="bg-gradient-to-b from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-t-[30%] rounded-b-xl p-8 md:p-12 border border-gray-300 dark:border-gray-600">
             <div className="text-center mb-6"><span className="text-4xl text-gray-400 dark:text-gray-500">✝</span></div>
-            <div className="text-center mb-6"><h2 className="text-sm uppercase tracking-widest text-gray-500 dark:text-gray-500">R.I.P</h2></div>
+            <div className="text-center mb-6"><h2 className="text-sm uppercase tracking-widest text-gray-500">R.I.P</h2></div>
             <div className="text-center mb-6">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">{tombstone.code_name}</h1>
               {cause && <span className={`text-lg ${cause.color}`}>{cause.emoji} {cause.label}</span>}
@@ -91,8 +159,10 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
             </div>
             {tombstone.description && <div className="text-center text-gray-700 dark:text-gray-300 mb-8 italic max-w-lg mx-auto">&ldquo;{tombstone.description}&rdquo;</div>}
             <div className="flex items-center justify-center gap-3 text-gray-600 dark:text-gray-400">
-              <img src={tombstone.avatar_url} alt={tombstone.username} className="w-6 h-6 rounded-full" />
-              <span>埋葬者：{tombstone.username}</span>
+              <Link href={`/user/${tombstone.user_id}`} className="flex items-center gap-2 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                <img src={tombstone.avatar_url} alt={tombstone.username} className="w-6 h-6 rounded-full" />
+                <span>埋葬者：{tombstone.username}</span>
+              </Link>
             </div>
             <div className="flex items-center justify-center gap-8 mt-8 pt-6 border-t border-gray-300 dark:border-gray-600">
               <button onClick={handleFlower} disabled={!session || hasFlowered || flowering} className={`flex items-center gap-2 transition-all ${hasFlowered ? 'text-pink-600 dark:text-pink-400' : session ? 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 cursor-pointer' : 'text-gray-400 dark:text-gray-500 cursor-not-allowed'}`}>
@@ -105,13 +175,18 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
                 <span className="text-lg font-medium">{tombstone.eulogy_count}</span>
                 <span className="text-sm">悼词</span>
               </div>
+              <Candle
+                count={tombstone.candle_count || 0}
+                onLight={handleCandle}
+                disabled={!session || hasCandled}
+              />
             </div>
           </div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Skull className="w-5 h-5 text-purple-600 dark:text-purple-400" /> 代码遗体</h3>
             <div className="code-block overflow-x-auto"><pre className="text-gray-700 dark:text-gray-300"><code>{tombstone.code_content}</code></pre></div>
-            <div className="mt-2 text-sm text-gray-500 dark:text-gray-500">语言：{tombstone.language}</div>
+            <div className="mt-2 text-sm text-gray-500">语言：{tombstone.language}</div>
           </motion.div>
         </motion.div>
 
@@ -123,7 +198,16 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
                 <img src={session.user?.image || ''} alt="" className="w-10 h-10 rounded-full flex-shrink-0" />
                 <div className="flex-1">
                   <textarea value={eulogyContent} onChange={(e) => setEulogyContent(e.target.value)} placeholder="写一段悼词..." rows={3} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors resize-none" />
-                  <div className="flex justify-end mt-2">
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={handleGenerateAI}
+                      disabled={!session || generatingAI}
+                      className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:from-gray-400 disabled:to-gray-400 dark:disabled:from-gray-700 dark:disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-all flex items-center gap-2"
+                    >
+                      {generatingAI ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                      AI 写悼词
+                    </button>
                     <button type="submit" disabled={!eulogyContent.trim() || submittingEulogy} className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-400 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2">
                       {submittingEulogy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                       发表悼词
@@ -144,7 +228,7 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
                   <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="font-medium text-gray-900 dark:text-white">{eulogy.username}</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-500">{new Date(eulogy.created_at).toLocaleDateString('zh-CN')}</span>
+                      <span className="text-sm text-gray-500">{new Date(eulogy.created_at).toLocaleDateString('zh-CN')}</span>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300">{eulogy.content}</p>
                   </div>

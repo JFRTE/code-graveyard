@@ -1,12 +1,28 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SessionProvider } from "@/components/SessionProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
+import ToastContainer from "@/components/Toast";
+import Particles from "@/components/Particles";
 
 export const metadata: Metadata = {
   title: "代码火葬场 - Code Graveyard",
   description: "一个专门用来埋葬代码的地方。每段代码都值得一个体面的葬礼。",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/icon.svg",
+    apple: "/icons/icon.svg",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#030712" },
+  ],
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -15,9 +31,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
         <ThemeProvider>
           <SessionProvider>
+            <Particles />
             <Navbar />
-            <main className="pt-16">{children}</main>
+            <main className="pt-16 relative z-[2]">{children}</main>
             <div className="fog-effect" />
+            <ToastContainer />
           </SessionProvider>
         </ThemeProvider>
       </body>

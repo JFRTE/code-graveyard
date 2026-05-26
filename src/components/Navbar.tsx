@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession, signIn, signOut } from 'next-auth/react'
-import { Skull, LogIn, LogOut, Plus, User, Sun, Moon } from 'lucide-react'
+import { Skull, LogIn, LogOut, Plus, User, Sun, Moon, Trophy, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
@@ -27,7 +27,17 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Leaderboard Link */}
+            <Link href="/leaderboard" className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="排行榜">
+              <Trophy className="w-5 h-5 text-yellow-500" />
+            </Link>
+
+            {/* Stats Link */}
+            <Link href="/stats" className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="数据统计">
+              <BarChart3 className="w-5 h-5 text-green-500" />
+            </Link>
+
             {/* Theme Toggle */}
             {mounted && (
               <button
@@ -54,7 +64,9 @@ export default function Navbar() {
                   <span className="hidden sm:inline">我的墓地</span>
                 </Link>
                 <div className="flex items-center gap-3">
-                  <img src={session.user?.image || ''} alt="" className="w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-700" />
+                  <Link href={`/user/${session.user?.id}`}>
+                    <img src={session.user?.image || ''} alt="" className="w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-700 hover:border-purple-500 transition-colors cursor-pointer" />
+                  </Link>
                   <button onClick={() => signOut()} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">
                     <LogOut className="w-5 h-5" />
                   </button>

@@ -11,10 +11,19 @@ export async function GET(request: NextRequest) {
   const page = parseInt(searchParams.get('page') || '1')
   const limit = parseInt(searchParams.get('limit') || '20')
   const userId = searchParams.get('userId')
+  const search = searchParams.get('search')
+  const cause = searchParams.get('cause')
+  const language = searchParams.get('language')
   const offset = (page - 1) * limit
 
-  let query = supabase.from('tombstones').select('*').order('created_at', { ascending: false }).range(offset, offset + limit - 1)
+  let query = supabase.from('tombstones').select('*').order('created_at', { ascending: false })
+
   if (userId) query = query.eq('user_id', userId)
+  if (search) query = query.or(`code_name.ilike.%${search}%,description.ilike.%${search}%`)
+  if (cause) query = query.eq('cause_of_death', cause)
+  if (language) query = query.eq('language', language)
+
+  query = query.range(offset, offset + limit - 1)
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -45,6 +54,7 @@ export async function POST(request: NextRequest) {
     description: description || '',
     flower_count: 0,
     eulogy_count: 0,
+    candle_count: 0,
   }).select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

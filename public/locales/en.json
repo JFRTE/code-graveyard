@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "title": "Code Graveyard",
+    "description": "A place to bury your code. Every piece of code deserves a decent funeral."
+  },
+  "nav": {
+    "bury": "Bury Code",
+    "myGraveyard": "My Graveyard",
+    "leaderboard": "Leaderboard",
+    "login": "GitHub Login",
+    "logout": "Logout"
+  },
+  "home": {
+    "hero": {
+      "title": "Code Graveyard",
+      "subtitle": "Every piece of code deserves a decent funeral",
+      "description": "Bury your deleted code, abandoned projects, and sacrificed functions here. Every piece of code has a tombstone and 'cause of death', others can visit and leave flowers."
+    },
+    "stats": {
+      "tombstones": "Code Buried",
+      "flowers": "Flowers Offered",
+      "eulogies": "Eulogies Written",
+      "topCause": "Top Cause"
+    },
+    "search": {
+      "placeholder": "Search code name, description...",
+      "filter": "Filter",
+      "cause": "Cause of Death",
+      "language": "Programming Language",
+      "allCauses": "All Causes",
+      "allLanguages": "All Languages"
+    },
+    "loadMore": "Load More",
+    "loading": "Loading...",
+    "noResults": "No tombstones found",
+    "noResultsDesc": "Try different search criteria"
+  },
+  "tombstone": {
+    "rip": "R.I.P",
+    "buriedBy": "Buried by",
+    "codeRemains": "Code Remains",
+    "language": "Language",
+    "eulogies": "Eulogies",
+    "flower": "Flower",
+    "flowered": "Flowered",
+    "loginToFlower": "Login to flower",
+    "candle": "Candle",
+    "candled": "Candled",
+    "loginToCandle": "Login to light candle",
+    "share": "Share",
+    "writeEulogy": "Write a eulogy...",
+    "submitEulogy": "Submit Eulogy",
+    "noEulogies": "No eulogies yet",
+    "noEulogiesDesc": "Be the first to write a eulogy",
+    "loginToEulogy": "Login to write a eulogy"
+  },
+  "bury": {
+    "title": "Bury Code",
+    "subtitle": "Give your code a decent funeral",
+    "codeName": "Code Name",
+    "codeNamePlaceholder": "e.g.: getUserData(), MyOldProject",
+    "language": "Programming Language",
+    "codeContent": "Code Content",
+    "codeContentPlaceholder": "Paste your code here...",
+    "causeOfDeath": "Cause of Death",
+    "birthDate": "Birth Date (optional)",
+    "deathDate": "Death Date",
+    "description": "Eulogy / Description (optional)",
+    "descriptionPlaceholder": "Write something to commemorate this code...",
+    "submit": "Bury This Code",
+    "submitting": "Burying...",
+    "loginRequired": "Please login first",
+    "success": "Code has been laid to rest 💀"
+  },
+  "myGraveyard": {
+    "title": "'s Graveyard",
+    "subtitle": "Your code's resting place",
+    "tombstones": "Tombstones",
+    "flowers": "Flowers Received",
+    "eulogies": "Eulogies Received",
+    "empty": "Your graveyard is empty",
+    "emptyDesc": "Bury your first code",
+    "deleteConfirm": "Are you sure you want to delete this tombstone?"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "Most popular code tombstones",
+    "topFlowers": "Most Flowers",
+    "topEulogies": "Most Eulogies"
+  },
+  "userProfile": {
+    "contributor": "Code Graveyard Contributor",
+    "tombstones": "Tombstones",
+    "flowers": "Flowers Received",
+    "eulogies": "Eulogies Received",
+    "graveyard": "'s Graveyard",
+    "noTombstones": "No tombstones yet"
+  },
+  "notFound": {
+    "title": "This code has been buried",
+    "description": "The page you're looking for has been laid to rest in a corner of the Code Graveyard, or never existed.",
+    "backHome": "Back to Graveyard"
+  },
+  "share": {
+    "title": "Share Tombstone",
+    "link": "Link",
+    "copied": "Link copied!",
+    "copyFailed": "Copy failed"
+  },
+  "causes": {
+    "refactored": "Refactored",
+    "deleted_by_mistake": "Deleted by Mistake",
+    "project_abandoned": "Project Abandoned",
+    "client_requirements": "Client Requirements",
+    "tech_obsolete": "Tech Obsolete",
+    "mystery_bug": "Mystery Bug",
+    "rewritten": "Rewritten",
+    "other": "Other"
+  },
+  "toast": {
+    "flowerSuccess": "Flower offered 🌸",
+    "candleSuccess": "Candle lit 🕯️",
+    "eulogySuccess": "Eulogy submitted 💬"
+  }
+}

@@ -12,6 +12,7 @@ export interface Tombstone {
   description: string
   flower_count: number
   eulogy_count: number
+  candle_count: number
   created_at: string
 }
 
@@ -26,6 +27,13 @@ export interface Eulogy {
 }
 
 export interface Flower {
+  id: string
+  tombstone_id: string
+  user_id: string
+  created_at: string
+}
+
+export interface Candle {
   id: string
   tombstone_id: string
   user_id: string

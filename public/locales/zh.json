@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "title": "代码火葬场 - Code Graveyard",
+    "description": "一个专门用来埋葬代码的地方。每段代码都值得一个体面的葬礼。"
+  },
+  "nav": {
+    "bury": "埋葬代码",
+    "myGraveyard": "我的墓地",
+    "leaderboard": "排行榜",
+    "login": "GitHub 登录",
+    "logout": "退出登录"
+  },
+  "home": {
+    "hero": {
+      "title": "代码火葬场",
+      "subtitle": "每段代码都值得一个体面的葬礼",
+      "description": "把你删掉的代码、废弃的项目、重构时牺牲的函数——都埋葬在这里。每段代码都有墓碑和\"死因\"，其他人可以来扫墓、献花。"
+    },
+    "stats": {
+      "tombstones": "代码已埋葬",
+      "flowers": "鲜花已献上",
+      "eulogies": "悼词已写下",
+      "topCause": "最热门死因"
+    },
+    "search": {
+      "placeholder": "搜索代码名称、描述...",
+      "filter": "筛选",
+      "cause": "死因",
+      "language": "编程语言",
+      "allCauses": "全部死因",
+      "allLanguages": "全部语言"
+    },
+    "loadMore": "加载更多",
+    "loading": "加载中...",
+    "noResults": "没有找到墓碑",
+    "noResultsDesc": "试试其他搜索条件"
+  },
+  "tombstone": {
+    "rip": "R.I.P",
+    "buriedBy": "埋葬者",
+    "codeRemains": "代码遗体",
+    "language": "语言",
+    "eulogies": "悼词",
+    "flower": "献花",
+    "flowered": "已献花",
+    "loginToFlower": "登录献花",
+    "candle": "点蜡烛",
+    "candled": "已点蜡烛",
+    "loginToCandle": "登录点蜡烛",
+    "share": "分享",
+    "writeEulogy": "写一段悼词...",
+    "submitEulogy": "发表悼词",
+    "noEulogies": "还没有悼词",
+    "noEulogiesDesc": "成为第一个写悼词的人吧",
+    "loginToEulogy": "登录后可以发表悼词"
+  },
+  "bury": {
+    "title": "埋葬代码",
+    "subtitle": "给你的代码一个体面的葬礼",
+    "codeName": "代码名称",
+    "codeNamePlaceholder": "例如：getUserData(), MyOldProject",
+    "language": "编程语言",
+    "codeContent": "代码内容",
+    "codeContentPlaceholder": "粘贴你的代码...",
+    "causeOfDeath": "死因",
+    "birthDate": "出生日期（可选）",
+    "deathDate": "死亡日期",
+    "description": "悼词 / 描述（可选）",
+    "descriptionPlaceholder": "写点什么纪念这段代码...",
+    "submit": "埋葬这段代码",
+    "submitting": "埋葬中...",
+    "loginRequired": "请先登录",
+    "success": "代码已安息 💀"
+  },
+  "myGraveyard": {
+    "title": "的墓地",
+    "subtitle": "你的代码安息之地",
+    "tombstones": "墓碑数量",
+    "flowers": "收到鲜花",
+    "eulogies": "收到悼词",
+    "empty": "你的墓地还是空的",
+    "emptyDesc": "埋葬第一段代码",
+    "deleteConfirm": "确定要删除这个墓碑吗？"
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "subtitle": "最受关注的代码墓碑",
+    "topFlowers": "最多献花",
+    "topEulogies": "最多悼词"
+  },
+  "userProfile": {
+    "contributor": "代码火葬场贡献者",
+    "tombstones": "墓碑",
+    "flowers": "收到鲜花",
+    "eulogies": "收到悼词",
+    "graveyard": "的墓地",
+    "noTombstones": "还没有墓碑"
+  },
+  "notFound": {
+    "title": "这段代码已经被埋葬了",
+    "description": "你寻找的页面已经安息在代码火葬场的某个角落，或者从未存在过。",
+    "backHome": "返回墓地首页"
+  },
+  "share": {
+    "title": "分享墓碑",
+    "link": "链接",
+    "copied": "链接已复制！",
+    "copyFailed": "复制失败"
+  },
+  "causes": {
+    "refactored": "重构牺牲",
+    "deleted_by_mistake": "误删手滑",
+    "project_abandoned": "项目废弃",
+    "client_requirements": "甲方砍需求",
+    "tech_obsolete": "技术过时",
+    "mystery_bug": "玄学Bug",
+    "rewritten": "推倒重写",
+    "other": "其他原因"
+  },
+  "toast": {
+    "flowerSuccess": "献花成功 🌸",
+    "candleSuccess": "点蜡烛成功 🕯️",
+    "eulogySuccess": "悼词发表成功 💬"
+  }
+}

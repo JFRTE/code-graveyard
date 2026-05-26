@@ -8,12 +8,15 @@ import { Skull, ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { CAUSE_OPTIONS, CAUSE_OF_DEATH_LABELS } from '@/lib/constants'
 import { CauseOfDeath } from '@/types'
+import BurialAnimation from '@/components/BurialAnimation'
+import { showToast } from '@/components/Toast'
 
 export default function BuryPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showBurial, setShowBurial] = useState(false)
   const [form, setForm] = useState({
     code_name: '',
     code_content: '',
@@ -45,7 +48,11 @@ export default function BuryPage() {
         throw new Error(data.error || '创建失败')
       }
       if (data && data.id) {
-        router.push(`/tombstone/${data.id}`)
+        setShowBurial(true)
+        showToast('代码已安息 💀', 'success')
+        setTimeout(() => {
+          router.push(`/tombstone/${data.id}`)
+        }, 2500)
       } else {
         throw new Error('返回数据异常，请检查数据库是否已创建表')
       }
@@ -70,6 +77,8 @@ export default function BuryPage() {
 
   return (
     <div className="min-h-screen py-12 px-4">
+      <BurialAnimation show={showBurial} onComplete={() => setShowBurial(false)} />
+
       <div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Link href="/" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 transition-colors">
