@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   description: "一个专门用来埋葬代码的地方。每段代码都值得一个体面的葬礼。",
   manifest: "/manifest.json",
   icons: {
-    icon: "/icons/icon.svg",
-    apple: "/icons/icon.svg",
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
   openGraph: {
     title: "代码火葬场 - Code Graveyard",

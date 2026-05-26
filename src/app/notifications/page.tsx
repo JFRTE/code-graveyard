@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
-import { Bell, Flower2, MessageSquare, Flame, Check, CheckCheck } from 'lucide-react'
+import { Bell, Flower2, MessageSquare, Flame, Check, CheckCheck, LogIn } from 'lucide-react'
 import Link from 'next/link'
 import { showToast } from '@/components/Toast'
 
@@ -24,12 +25,14 @@ const TYPE_CONFIG = {
 }
 
 export default function NotificationsPage() {
+  const { data: session, status } = useSession()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchNotifications()
-  }, [])
+    if (session) fetchNotifications()
+    else if (status === 'unauthenticated') setLoading(false)
+  }, [session, status])
 
   const fetchNotifications = async () => {
     try {
@@ -72,6 +75,18 @@ export default function NotificationsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-purple-600 dark:border-purple-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Bell className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">请先登录查看通知</p>
+          <Link href="/" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">返回首页</Link>
+        </div>
       </div>
     )
   }

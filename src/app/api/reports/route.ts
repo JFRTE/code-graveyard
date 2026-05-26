@@ -5,6 +5,8 @@ import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
+const ADMIN_USERS = ['JFRTE'] // GitHub usernames
+
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: '请先登录' }, { status: 401 })
@@ -33,15 +35,13 @@ export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: '未授权' }, { status: 401 })
 
-  // Simple admin check - in production use a proper role system
-  const supabase = getSupabase()
-  const { data: tombstone } = await supabase
-    .from('tombstones')
-    .select('user_id')
-    .eq('user_id', session.user.id)
-    .limit(1)
+  // Admin check
+  const username = session.user.name || ''
+  if (!ADMIN_USERS.includes(username)) {
+    return NextResponse.json({ error: '无管理员权限' }, { status: 403 })
+  }
 
-  // For now, only show reports to admin (you can improve this)
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('reports')
     .select('*, tombstones(code_name)')

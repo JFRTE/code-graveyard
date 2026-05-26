@@ -1,18 +1,22 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
-import { Bookmark, Skull } from 'lucide-react'
+import { Bookmark, LogIn } from 'lucide-react'
+import Link from 'next/link'
 import TombstoneCard from '@/components/TombstoneCard'
 import { Tombstone } from '@/types'
 
 export default function BookmarksPage() {
+  const { data: session, status } = useSession()
   const [tombstones, setTombstones] = useState<Tombstone[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchBookmarks()
-  }, [])
+    if (session) fetchBookmarks()
+    else if (status === 'unauthenticated') setLoading(false)
+  }, [session, status])
 
   const fetchBookmarks = async () => {
     try {
@@ -32,6 +36,18 @@ export default function BookmarksPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-purple-600 dark:border-purple-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Bookmark className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">请先登录查看收藏</p>
+          <Link href="/" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">返回首页</Link>
+        </div>
       </div>
     )
   }

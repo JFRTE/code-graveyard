@@ -8,8 +8,8 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   const supabase = getSupabase()
   const { searchParams } = new URL(request.url)
-  const page = parseInt(searchParams.get('page') || '1')
-  const limit = parseInt(searchParams.get('limit') || '20')
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20') || 20))
   const userId = searchParams.get('userId')
   const search = searchParams.get('search')
   const cause = searchParams.get('cause')
@@ -18,6 +18,12 @@ export async function GET(request: NextRequest) {
   const offset = (page - 1) * limit
 
   let query = supabase.from('tombstones').select('*')
+
+  // Apply filters
+  if (userId) query = query.eq('user_id', userId)
+  if (search) query = query.or(`code_name.ilike.%${search}%,description.ilike.%${search}%`)
+  if (cause) query = query.eq('cause_of_death', cause)
+  if (language) query = query.eq('language', language)
 
   // Sorting
   switch (sort) {
@@ -33,22 +39,26 @@ export async function GET(request: NextRequest) {
     case 'oldest':
       query = query.order('created_at', { ascending: true })
       break
-    default: // newest
+    default:
       query = query.order('created_at', { ascending: false })
   }
-
-  if (userId) query = query.eq('user_id', userId)
-  if (search) query = query.or(`code_name.ilike.%${search}%,description.ilike.%${search}%`)
-  if (cause) query = query.eq('cause_of_death', cause)
-  if (language) query = query.eq('language', language)
 
   query = query.range(offset, offset + limit - 1)
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const { count } = await supabase.from('tombstones').select('*', { count: 'exact', head: true })
-  const response = NextResponse.json({ tombstones: data, total: count, page, limit, totalPages: Math.ceil((count || 0) / limit) })
+  // Count with same filters applied
+  let countQuery = supabase.from('tombstones').select('*', { count: 'exact', head: true })
+  if (userId) countQuery = countQuery.eq('user_id', userId)
+  if (search) countQuery = countQuery.or(`code_name.ilike.%${search}%,description.ilike.%${search}%`)
+  if (cause) countQuery = countQuery.eq('cause_of_death', cause)
+  if (language) countQuery = countQuery.eq('language', language)
+
+  const { count, error: countError } = await countQuery
+  if (countError) return NextResponse.json({ error: countError.message }, { status: 500 })
+
+  const response = NextResponse.json({ tombstones: data, total: count || 0, page, limit, totalPages: Math.ceil((count || 0) / limit) })
   response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60')
   return response
 }
@@ -76,6 +86,8 @@ export async function POST(request: NextRequest) {
     flower_count: 0,
     eulogy_count: 0,
     candle_count: 0,
+    view_count: 0,
+    tags: [],
   }).select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

@@ -114,23 +114,32 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
     setBookmarking(true)
     try {
       if (isBookmarked) {
-        await fetch('/api/bookmarks', {
+        const res = await fetch('/api/bookmarks', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tombstone_id: id }),
         })
-        setIsBookmarked(false)
-        showToast('已取消收藏', 'success')
+        if (res.ok) {
+          setIsBookmarked(false)
+          showToast('已取消收藏', 'success')
+        } else {
+          showToast('取消收藏失败', 'error')
+        }
       } else {
-        await fetch('/api/bookmarks', {
+        const res = await fetch('/api/bookmarks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tombstone_id: id }),
         })
-        setIsBookmarked(true)
-        showToast('收藏成功 ❤️', 'success')
+        if (res.ok) {
+          setIsBookmarked(true)
+          showToast('收藏成功 ❤️', 'success')
+        } else {
+          const data = await res.json()
+          showToast(data.error || '收藏失败', 'error')
+        }
       }
-    } catch (e) { console.error(e) } finally { setBookmarking(false) }
+    } catch (e) { showToast('操作失败', 'error') } finally { setBookmarking(false) }
   }
 
   const handleReport = async () => {
@@ -146,8 +155,11 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
         showToast('举报已提交', 'success')
         setShowReport(false)
         setReportReason('')
+      } else {
+        const data = await res.json()
+        showToast(data.error || '举报失败', 'error')
       }
-    } catch (e) { console.error(e) } finally { setReporting(false) }
+    } catch (e) { showToast('举报失败', 'error') } finally { setReporting(false) }
   }
 
   const handleFlower = async () => {
@@ -160,8 +172,11 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
         setTombstone(prev => prev ? { ...prev, flower_count: prev.flower_count + 1 } : null)
         showToast('献花成功 🌸', 'success')
         playFlowerSound()
+      } else {
+        const data = await res.json()
+        showToast(data.error || '献花失败', 'error')
       }
-    } catch (e) { console.error(e) } finally { setFlowering(false) }
+    } catch (e) { showToast('献花失败', 'error') } finally { setFlowering(false) }
   }
 
   const handleCandle = async () => {
@@ -173,8 +188,11 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
         setHasCandled(true)
         setTombstone(prev => prev ? { ...prev, candle_count: (prev.candle_count || 0) + 1 } : null)
         showToast('点蜡烛成功 🕯️', 'success')
+      } else {
+        const data = await res.json()
+        showToast(data.error || '点蜡烛失败', 'error')
       }
-    } catch (e) { console.error(e) } finally { setCandling(false) }
+    } catch (e) { showToast('点蜡烛失败', 'error') } finally { setCandling(false) }
   }
 
   const handleEulogy = async (e: React.FormEvent) => {
@@ -223,8 +241,11 @@ export default function TombstoneDetailPage({ params }: { params: { id: string }
         setEulogies(prev => prev.filter(e => e.id !== eulogyId))
         setTombstone(prev => prev ? { ...prev, eulogy_count: Math.max(0, prev.eulogy_count - 1) } : null)
         showToast('悼词已删除', 'success')
+      } else {
+        const data = await res.json()
+        showToast(data.error || '删除失败', 'error')
       }
-    } catch (e) { console.error(e) }
+    } catch (e) { showToast('删除失败', 'error') }
   }
 
   const handleSaveEdit = async () => {

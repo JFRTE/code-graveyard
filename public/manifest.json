@@ -1,22 +1,16 @@
 {
   "name": "代码火葬场",
-  "short_name": "代码火葬场",
-  "description": "一个专门用来埋葬代码的地方。每段代码都值得一个体面的葬礼。",
+  "short_name": "Code Graveyard",
+  "description": "一个专门用来埋葬代码的地方",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#030712",
   "theme_color": "#9333ea",
-  "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }

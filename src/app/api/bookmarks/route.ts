@@ -10,11 +10,13 @@ export async function GET() {
   if (!session?.user) return NextResponse.json({ bookmarks: [] })
 
   const supabase = getSupabase()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('bookmarks')
     .select('tombstone_id, tombstones(*)')
     .eq('user_id', session.user.id)
     .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const tombstones = (data || []).map((b: any) => b.tombstones).filter(Boolean)
   return NextResponse.json({ bookmarks: tombstones })
@@ -47,11 +49,12 @@ export async function DELETE(request: NextRequest) {
   const supabase = getSupabase()
   const { tombstone_id } = await request.json()
 
-  await supabase
+  const { error } = await supabase
     .from('bookmarks')
     .delete()
     .eq('user_id', session.user.id)
     .eq('tombstone_id', tombstone_id)
 
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
 }
