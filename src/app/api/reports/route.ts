@@ -6,7 +6,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
-const ADMIN_USER_IDS = ['12345678'] // GitHub user IDs (get from session.user.id)
+const ADMIN_USER_IDS = ['75133540'] // JFRTE
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
