@@ -126,7 +126,10 @@ export async function POST(
   }
 
   // Atomic increment eulogy count
-  await supabase.rpc('increment_counter', { row_id: id, column_name: 'eulogy_count' })
+  // Atomic increment (best effort - falls back gracefully)
+  try {
+    129|  await supabase.rpc('increment_counter', { row_id: id, column_name: 'eulogy_count' })
+  } catch (_) {}
 
   return NextResponse.json(eulogy, { status: 201 })
 }

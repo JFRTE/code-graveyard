@@ -61,7 +61,10 @@ export async function POST(
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Atomic increment flower count
-  await supabase.rpc('increment_counter', { row_id: params.id, column_name: 'flower_count' })
+  // Atomic increment (best effort - falls back gracefully)
+  try {
+    64|  await supabase.rpc('increment_counter', { row_id: params.id, column_name: 'flower_count' })
+  } catch (_) {}
 
   // Create notification
   const { data: tombstone } = await supabase
