@@ -98,14 +98,16 @@ export async function POST(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Log activity
-  await supabase.from('activity_log').insert({
+  try {
+    await supabase.from('activity_log').insert({
     type: 'tombstone',
     user_id: session.user.id,
     username: session.user.name || 'Anonymous',
     avatar_url: session.user.image || '',
     tombstone_id: data.id,
     tombstone_name: code_name,
-  }).catch(() => {})
+    })
+  } catch (_) {}
 
   return NextResponse.json(data, { status: 201 })
 }

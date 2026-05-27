@@ -74,25 +74,29 @@ export async function POST(
     .single()
 
   if (tombstone && tombstone.user_id !== session.user.id) {
-    await supabase.from('notifications').insert({
+    try {
+      await supabase.from('notifications').insert({
       user_id: tombstone.user_id,
       type: 'candle',
       from_username: session.user.name || 'Anonymous',
       from_avatar_url: session.user.image || '',
       tombstone_id: params.id,
       tombstone_name: tombstone.code_name,
-    }).catch(() => {})
+      })
+    } catch (_) {}
   }
 
   // Log activity
-  await supabase.from('activity_log').insert({
+  try {
+    await supabase.from('activity_log').insert({
     type: 'candle',
     user_id: session.user.id,
     username: session.user.name || 'Anonymous',
     avatar_url: session.user.image || '',
     tombstone_id: params.id,
     tombstone_name: tombstone?.code_name || '',
-  }).catch(() => {})
+    })
+  } catch (_) {}
 
   return NextResponse.json(data, { status: 201 })
 }
