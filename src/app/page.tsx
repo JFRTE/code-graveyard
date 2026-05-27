@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Skull, Flower2, MessageSquare, TrendingUp, Search, Filter, ChevronDown, ArrowUpDown } from 'lucide-react'
 import TombstoneCard from '@/components/TombstoneCard'
@@ -42,17 +42,22 @@ export default function Home() {
   }, [searchInput])
 
   // AbortController for race condition prevention
-  const abortRef = useCallback((() => {
+  const abortRef = useRef<{ abort: () => void; signal: () => AbortSignal }>({
+    abort: () => {},
+    signal: () => new AbortController().signal,
+  })
+  useEffect(() => {
     let controller: AbortController | null = null
-    return {
+    abortRef.current = {
       abort: () => { controller?.abort(); controller = null },
       signal: () => { controller = new AbortController(); return controller.signal },
     }
-  })(), [])
+    return () => controller?.abort()
+  }, [])
 
   useEffect(() => {
-    abortRef.abort()
-    const signal = abortRef.signal()
+    abortRef.current.abort()
+    const signal = abortRef.current.signal()
 
     const load = async () => {
       setLoading(true)
@@ -94,7 +99,7 @@ export default function Home() {
       })
       .catch(() => {})
 
-    return () => abortRef.abort()
+    return () => abortRef.current.abort()
   }, [search, selectedCause, selectedLanguage, sort])
 
   const handleLoadMore = async () => {
@@ -279,7 +284,7 @@ export default function Home() {
                         {t.home.loading}
                       </>
                     ) : (
-                      {t.home.loadMore}
+                      t.home.loadMore
                     )}
                   </button>
                 </div>
