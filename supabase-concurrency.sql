@@ -7,7 +7,6 @@ RETURNS void AS $$
 DECLARE
   allowed_columns TEXT[] := ARRAY['flower_count', 'eulogy_count', 'candle_count', 'view_count'];
 BEGIN
-  -- Validate column name against whitelist
   IF NOT (column_name = ANY(allowed_columns)) THEN
     RAISE EXCEPTION 'Invalid column name: %', column_name;
   END IF;
@@ -28,7 +27,7 @@ BEGIN
   END IF;
 END $$;
 
--- Rate limiting table (Supabase-based)
+-- Rate limiting table
 CREATE TABLE IF NOT EXISTS rate_limits (
   key TEXT PRIMARY KEY,
   count INTEGER DEFAULT 1,
@@ -36,6 +35,9 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 );
 
 ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
+
+-- Drop and recreate policy (avoids "already exists" error)
+DROP POLICY IF EXISTS "Service role only" ON rate_limits;
 CREATE POLICY "Service role only" ON rate_limits FOR ALL USING (true);
 
 -- Rate limit check function
