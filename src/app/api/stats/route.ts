@@ -6,7 +6,16 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const supabase = getSupabase()
 
-  // Get all tombstones for stats
+  // Try RPC aggregation first (fast, single query)
+  const { data: rpcData, error: rpcError } = await supabase.rpc('get_graveyard_stats')
+
+  if (!rpcError && rpcData) {
+    const response = NextResponse.json(rpcData)
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
+    return response
+  }
+
+  // Fallback: fetch minimal data and aggregate in JS
   const { data: tombstones, error } = await supabase
     .from('tombstones')
     .select('cause_of_death, language, flower_count, eulogy_count, candle_count, created_at')
@@ -16,30 +25,21 @@ export async function GET() {
   const all = tombstones || []
   const total = all.length
 
-  // Cause distribution
   const causeCounts: Record<string, number> = {}
   const langCounts: Record<string, number> = {}
-  let totalFlowers = 0
-  let totalEulogies = 0
-  let totalCandles = 0
+  let totalFlowers = 0, totalEulogies = 0, totalCandles = 0
 
   all.forEach(t => {
-    causeCounts[t.cause_of_death] = (causeCounts[t.cause_of_death] || 0) + 1
-    langCounts[t.language] = (langCounts[t.language] || 0) + 1
+    causeCounts[t.cause_of_death || 'unknown'] = (causeCounts[t.cause_of_death || 'unknown'] || 0) + 1
+    langCounts[t.language || 'unknown'] = (langCounts[t.language || 'unknown'] || 0) + 1
     totalFlowers += t.flower_count || 0
     totalEulogies += t.eulogy_count || 0
     totalCandles += t.candle_count || 0
   })
 
-  const topCauses = Object.entries(causeCounts)
-    .map(([cause, count]) => ({ cause, count }))
-    .sort((a, b) => b.count - a.count)
+  const topCauses = Object.entries(causeCounts).map(([cause, count]) => ({ cause, count })).sort((a, b) => b.count - a.count)
+  const topLanguages = Object.entries(langCounts).map(([lang, count]) => ({ lang, count })).sort((a, b) => b.count - a.count)
 
-  const topLanguages = Object.entries(langCounts)
-    .map(([lang, count]) => ({ lang, count }))
-    .sort((a, b) => b.count - a.count)
-
-  // Monthly trend (last 12 months)
   const now = new Date()
   const monthly: { month: string; count: number }[] = []
   for (let i = 11; i >= 0; i--) {
@@ -49,15 +49,7 @@ export async function GET() {
     monthly.push({ month: `${d.getMonth() + 1}月`, count })
   }
 
-  const response = NextResponse.json({
-    total,
-    totalFlowers,
-    totalEulogies,
-    totalCandles,
-    topCauses,
-    topLanguages,
-    monthly,
-  })
+  const response = NextResponse.json({ total, totalFlowers, totalEulogies, totalCandles, topCauses, topLanguages, monthly })
   response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
   return response
 }

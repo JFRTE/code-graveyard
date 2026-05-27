@@ -6,7 +6,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
-const ADMIN_USERS = ['JFRTE'] // GitHub usernames
+const ADMIN_USER_IDS = ['12345678'] // GitHub user IDs (get from session.user.id)
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -40,9 +40,9 @@ export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: '未授权' }, { status: 401 })
 
-  // Admin check
-  const username = session.user.name || ''
-  if (!ADMIN_USERS.includes(username)) {
+  // Admin check (use stable user ID, not mutable username)
+  const userId = session.user.id || ''
+  if (!ADMIN_USER_IDS.includes(userId)) {
     return NextResponse.json({ error: '无管理员权限' }, { status: 403 })
   }
 

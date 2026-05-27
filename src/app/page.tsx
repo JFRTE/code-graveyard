@@ -84,11 +84,15 @@ export default function Home() {
 
     load()
 
-    // Also fetch stats (only on first load or filter change)
-    fetch('/api/stats', { signal })
+    return () => abortRef.current.abort()
+  }, [search, selectedCause, selectedLanguage, sort])
+
+  // Fetch stats only once on mount
+  useEffect(() => {
+    fetch('/api/stats')
       .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (data && !signal.aborted) {
+        if (data) {
           setStats({
             total_tombstones: data.total || 0,
             total_flowers: data.totalFlowers || 0,
@@ -98,9 +102,7 @@ export default function Home() {
         }
       })
       .catch(() => {})
-
-    return () => abortRef.current.abort()
-  }, [search, selectedCause, selectedLanguage, sort])
+  }, [])
 
   const handleLoadMore = async () => {
     if (loadingMore || !hasMore) return

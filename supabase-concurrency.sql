@@ -1,17 +1,23 @@
 -- Atomic increment function for Code Graveyard
 -- Run in Supabase SQL Editor
 
--- Atomic increment function (prevents race conditions)
+-- Atomic increment function with column whitelist (prevents SQL injection)
 CREATE OR REPLACE FUNCTION increment_counter(row_id UUID, column_name TEXT)
 RETURNS void AS $$
+DECLARE
+  allowed_columns TEXT[] := ARRAY['flower_count', 'eulogy_count', 'candle_count', 'view_count'];
 BEGIN
+  -- Validate column name against whitelist
+  IF NOT (column_name = ANY(allowed_columns)) THEN
+    RAISE EXCEPTION 'Invalid column name: %', column_name;
+  END IF;
+  
   EXECUTE format('UPDATE tombstones SET %I = COALESCE(%I, 0) + 1 WHERE id = $1', column_name, column_name)
   USING row_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- UNIQUE constraints to prevent duplicate interactions
--- (IF NOT EXISTS not supported for constraints, so use DO block)
 DO $$ 
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'unique_user_flower') THEN
@@ -39,29 +45,23 @@ DECLARE
   current_count INTEGER;
   window_start TIMESTAMPTZ;
 BEGIN
-  -- Get current window
   SELECT count, rate_limits.window_start INTO current_count, window_start
   FROM rate_limits WHERE key = p_key;
   
   IF NOT FOUND THEN
-    -- New key, insert and allow
     INSERT INTO rate_limits (key, count, window_start) VALUES (p_key, 1, NOW());
     RETURN TRUE;
   END IF;
   
-  -- Check if window expired
   IF NOW() - window_start > (p_window_seconds || ' seconds')::INTERVAL THEN
-    -- Reset window
     UPDATE rate_limits SET count = 1, window_start = NOW() WHERE key = p_key;
     RETURN TRUE;
   END IF;
   
-  -- Check limit
   IF current_count >= p_max THEN
     RETURN FALSE;
   END IF;
   
-  -- Increment
   UPDATE rate_limits SET count = count + 1 WHERE key = p_key;
   RETURN TRUE;
 END;

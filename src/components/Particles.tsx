@@ -1,45 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
-interface Particle {
-  id: number
-  x: number
-  y: number
-  size: number
-  speedX: number
-  speedY: number
-  opacity: number
-  emoji: string
-}
+import { useMemo } from 'react'
 
 const EMOJIS = ['💀', '🪦', '🕯️', '👻', '⚰️', '🌸', '🦇']
 
 export default function Particles() {
-  const [particles, setParticles] = useState<Particle[]>([])
-
-  useEffect(() => {
-    const initialParticles: Particle[] = Array.from({ length: 15 }, (_, i) => ({
+  // Generate particles once with CSS animations (no setState, no re-renders)
+  const particles = useMemo(() => {
+    return Array.from({ length: 15 }, (_, i) => ({
       id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
+      emoji: EMOJIS[i % EMOJIS.length],
+      // Random initial positions and animation parameters
+      startX: Math.random() * 100,
+      startY: 100 + Math.random() * 20, // Start below viewport
       size: Math.random() * 16 + 12,
-      speedX: (Math.random() - 0.5) * 0.3,
-      speedY: -Math.random() * 0.5 - 0.1,
+      duration: Math.random() * 15 + 15, // 15-30 seconds
+      delay: Math.random() * 10, // 0-10 seconds delay
+      drift: (Math.random() - 0.5) * 30, // -15 to +15 horizontal drift
       opacity: Math.random() * 0.3 + 0.1,
-      emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
     }))
-    setParticles(initialParticles)
-
-    const interval = setInterval(() => {
-      setParticles(prev => prev.map(p => ({
-        ...p,
-        x: (p.x + p.speedX + 100) % 100,
-        y: (p.y + p.speedY + 100) % 100,
-      })))
-    }, 50)
-
-    return () => clearInterval(interval)
   }, [])
 
   return (
@@ -47,14 +26,16 @@ export default function Particles() {
       {particles.map(p => (
         <div
           key={p.id}
-          className="absolute transition-transform duration-1000 ease-linear"
+          className="absolute animate-float-up"
           style={{
-            left: `${p.x}%`,
-            top: `${p.y}%`,
+            left: `${p.startX}%`,
+            bottom: `-${Math.abs(p.startY - 100)}%`,
             fontSize: `${p.size}px`,
             opacity: p.opacity,
-            transform: `rotate(${p.x * 3.6}deg)`,
-          }}
+            animationDuration: `${p.duration}s`,
+            animationDelay: `${p.delay}s`,
+            '--drift': `${p.drift}px`,
+          } as React.CSSProperties}
         >
           {p.emoji}
         </div>
