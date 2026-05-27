@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,6 +68,10 @@ export async function POST(request: NextRequest) {
   const supabase = getSupabase()
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: '请先登录' }, { status: 401 })
+
+  // Rate limit
+  const rateLimit = await checkRateLimit(`bury:${session.user.id}`, 5, 300)
+  if (!rateLimit.allowed) return NextResponse.json({ error: '操作太频繁，请稍后再试' }, { status: 429 })
 
   const body = await request.json()
   const { code_name, code_content, language, cause_of_death, birth_date, death_date, description } = body

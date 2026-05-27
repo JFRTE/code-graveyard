@@ -1,22 +1,19 @@
-// Simple in-memory rate limiter for API routes
-const requests = new Map<string, { count: number; resetTime: number }>()
+import { getSupabase } from './supabase'
 
-const WINDOW_MS = 60 * 1000 // 1 minute
-const MAX_REQUESTS = 30 // max requests per window
+// Supabase-based rate limiter (works across Vercel serverless instances)
+export async function checkRateLimit(key: string, maxRequests = 30, windowSeconds = 60): Promise<{ allowed: boolean; remaining: number }> {
+  const supabase = getSupabase()
 
-export function checkRateLimit(key: string): { allowed: boolean; remaining: number } {
-  const now = Date.now()
-  const entry = requests.get(key)
+  const { data, error } = await supabase.rpc('check_rate_limit', {
+    p_key: key,
+    p_max: maxRequests,
+    p_window_seconds: windowSeconds,
+  })
 
-  if (!entry || now > entry.resetTime) {
-    requests.set(key, { count: 1, resetTime: now + WINDOW_MS })
-    return { allowed: true, remaining: MAX_REQUESTS - 1 }
+  if (error) {
+    // If RPC fails (e.g., table doesn't exist), allow the request
+    return { allowed: true, remaining: maxRequests }
   }
 
-  if (entry.count >= MAX_REQUESTS) {
-    return { allowed: false, remaining: 0 }
-  }
-
-  entry.count++
-  return { allowed: true, remaining: MAX_REQUESTS - entry.count }
+  return { allowed: data === true, remaining: data === true ? maxRequests - 1 : 0 }
 }

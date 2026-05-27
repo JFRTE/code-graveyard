@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +31,10 @@ export async function POST(
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: '请先登录' }, { status: 401 })
 
+  // Rate limit
+  const rateLimit = await checkRateLimit(`flower:${session.user.id}`, 10, 60)
+  if (!rateLimit.allowed) return NextResponse.json({ error: '操作太频繁，请稍后再试' }, { status: 429 })
+
   const supabase = getSupabase()
 
   // Check if already flowered
@@ -55,11 +60,8 @@ export async function POST(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Increment flower count (best effort)
-  try {
-    const { data: t } = await supabase.from('tombstones').select('flower_count').eq('id', params.id).single()
-    if (t) await supabase.from('tombstones').update({ flower_count: (t.flower_count || 0) + 1 }).eq('id', params.id)
-  } catch (_) {}
+  // Atomic increment flower count
+  await supabase.rpc('increment_counter', { row_id: params.id, column_name: 'flower_count' })
 
   // Create notification
   const { data: tombstone } = await supabase

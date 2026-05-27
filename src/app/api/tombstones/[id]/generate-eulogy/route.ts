@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,6 +83,10 @@ export async function POST(
     return NextResponse.json({ error: '请先登录' }, { status: 401 })
   }
 
+  // Rate limit
+  const rateLimit = await checkRateLimit(`ai-eulogy:${session.user.id}`, 5, 60)
+  if (!rateLimit.allowed) return NextResponse.json({ error: '操作太频繁，请稍后再试' }, { status: 429 })
+
   const supabase = getSupabase()
   const { id } = params
 
@@ -120,11 +125,8 @@ export async function POST(
     return NextResponse.json({ error: insertError.message }, { status: 500 })
   }
 
-  // Update eulogy count (best effort)
-  try {
-    const { data: t } = await supabase.from('tombstones').select('eulogy_count').eq('id', id).single()
-    if (t) await supabase.from('tombstones').update({ eulogy_count: (t.eulogy_count || 0) + 1 }).eq('id', id)
-  } catch (_) {}
+  // Atomic increment eulogy count
+  await supabase.rpc('increment_counter', { row_id: id, column_name: 'eulogy_count' })
 
   return NextResponse.json(eulogy, { status: 201 })
 }
