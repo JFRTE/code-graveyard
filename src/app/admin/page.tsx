@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Shield, AlertTriangle, CheckCircle, XCircle, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { showToast } from '@/components/Toast'
+import { useI18n } from '@/components/I18nProvider'
 
 interface Report {
   id: string
@@ -17,6 +18,7 @@ interface Report {
 }
 
 export default function AdminPage() {
+  const { t } = useI18n()
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('pending')
@@ -41,6 +43,12 @@ export default function AdminPage() {
 
   const filteredReports = reports.filter(r => filter === 'all' || r.status === filter)
 
+  const statusLabel = (status: string) => {
+    if (status === 'pending') return t.admin.pending
+    if (status === 'resolved') return t.admin.resolved
+    return t.admin.dismissed
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -54,8 +62,8 @@ export default function AdminPage() {
       <div className="max-w-4xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
           <Shield className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">管理后台</h1>
-          <p className="text-gray-600 dark:text-gray-400">举报管理 ⚠️</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{t.admin.title}</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t.admin.subtitle}</p>
         </motion.div>
 
         {/* Filter tabs */}
@@ -70,7 +78,7 @@ export default function AdminPage() {
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
-              {f === 'pending' ? '待处理' : f === 'resolved' ? '已处理' : f === 'dismissed' ? '已驳回' : '全部'}
+              {statusLabel(f === 'all' ? 'all' : f)}
             </button>
           ))}
         </div>
@@ -78,7 +86,7 @@ export default function AdminPage() {
         {filteredReports.length === 0 ? (
           <div className="text-center py-12">
             <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">没有举报</p>
+            <p className="text-gray-600 dark:text-gray-400">{t.admin.noReports}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -95,7 +103,7 @@ export default function AdminPage() {
                     <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle className={`w-5 h-5 ${report.status === 'pending' ? 'text-yellow-500' : report.status === 'resolved' ? 'text-green-500' : 'text-gray-500'}`} />
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {report.tombstones?.code_name || '未知墓碑'}
+                        {report.tombstones?.code_name || t.admin.unknownTombstone}
                       </span>
                       <Link href={`/tombstone/${report.tombstone_id}`} className="text-purple-600 dark:text-purple-400 hover:text-purple-500">
                         <ExternalLink className="w-4 h-4" />
@@ -103,7 +111,7 @@ export default function AdminPage() {
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">{report.reason}</p>
                     <p className="text-xs text-gray-500">
-                      举报者: {report.user_id} · {new Date(report.created_at).toLocaleString('zh-CN')}
+                      {t.admin.reporter}: {report.user_id} · {new Date(report.created_at).toLocaleString('zh-CN')}
                     </p>
                   </div>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
@@ -111,7 +119,7 @@ export default function AdminPage() {
                     report.status === 'resolved' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
                     'bg-gray-100 dark:bg-gray-800 text-gray-500'
                   }`}>
-                    {report.status === 'pending' ? '待处理' : report.status === 'resolved' ? '已处理' : '已驳回'}
+                    {statusLabel(report.status)}
                   </span>
                 </div>
               </motion.div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { BarChart3, Skull, Flower2, MessageSquare, Calendar, TrendingUp, Flame } from 'lucide-react'
 import PieChart from '@/components/PieChart'
+import { useI18n } from '@/components/I18nProvider'
 
 const COLORS = [
   '#ef4444', '#a855f7', '#6b7280', '#eab308',
@@ -32,6 +33,7 @@ const CAUSE_LABELS: Record<string, { label: string; emoji: string }> = {
 }
 
 export default function StatsPage() {
+  const { t } = useI18n()
   const [stats, setStats] = useState<StatsData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -61,7 +63,7 @@ export default function StatsPage() {
   if (!stats) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600 dark:text-gray-400">加载失败</p>
+        <p className="text-gray-600 dark:text-gray-400">{t.stats.loadFail}</p>
       </div>
     )
   }
@@ -84,17 +86,17 @@ export default function StatsPage() {
       <div className="max-w-5xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
           <BarChart3 className="w-12 h-12 text-purple-600 dark:text-purple-400 mx-auto mb-4" />
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">墓地数据</h1>
-          <p className="text-gray-600 dark:text-gray-400">代码死亡率统计报告 📊</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{t.stats.title}</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t.stats.subtitle}</p>
         </motion.div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           {[
-            { icon: Skull, label: '总墓碑', value: stats.total, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-            { icon: Flower2, label: '总献花', value: stats.totalFlowers, color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-50 dark:bg-pink-900/20' },
-            { icon: MessageSquare, label: '总悼词', value: stats.totalEulogies, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-            { icon: Flame, label: '总蜡烛', value: stats.totalCandles, color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-900/20' },
+            { icon: Skull, label: t.stats.tombstones, value: stats.total, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+            { icon: Flower2, label: t.stats.flowers, value: stats.totalFlowers, color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-50 dark:bg-pink-900/20' },
+            { icon: MessageSquare, label: t.stats.eulogies, value: stats.totalEulogies, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+            { icon: Flame, label: t.stats.candles, value: stats.totalCandles, color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-900/20' },
           ].map((card, i) => (
             <motion.div
               key={i}
@@ -113,7 +115,7 @@ export default function StatsPage() {
         {/* Pie Chart */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl p-8 mb-8">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <Skull className="w-5 h-5 text-purple-600 dark:text-purple-400" /> 死因分布
+            <Skull className="w-5 h-5 text-purple-600 dark:text-purple-400" /> {t.stats.causeDistribution}
           </h2>
           {pieData.length > 0 ? (
             <div className="flex flex-col md:flex-row items-center gap-8">
@@ -137,14 +139,14 @@ export default function StatsPage() {
               </div>
             </div>
           ) : (
-            <p className="text-center text-gray-500 dark:text-gray-400 py-8">暂无数据</p>
+            <p className="text-center text-gray-500 dark:text-gray-400 py-8">{t.stats.noData}</p>
           )}
         </motion.div>
 
         {/* Language Distribution */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl p-8 mb-8">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" /> 编程语言分布
+            <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" /> {t.stats.langDistribution}
           </h2>
           {stats.topLanguages.length > 0 ? (
             <div className="space-y-3">
@@ -160,14 +162,14 @@ export default function StatsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500 dark:text-gray-400 py-8">暂无数据</p>
+            <p className="text-center text-gray-500 dark:text-gray-400 py-8">{t.stats.noData}</p>
           )}
         </motion.div>
 
         {/* Monthly Trend */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl p-8">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" /> 近 12 个月埋葬趋势
+            <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" /> {t.stats.monthlyTrend}
           </h2>
           <div className="flex items-end justify-between gap-1 h-40">
             {stats.monthly.map((d, i) => (

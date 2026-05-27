@@ -7,16 +7,19 @@ import TombstoneCard from '@/components/TombstoneCard'
 import { SkeletonGrid } from '@/components/Skeleton'
 import { Tombstone, GlobalStats } from '@/types'
 import { CAUSE_OF_DEATH_LABELS, CAUSE_OPTIONS } from '@/lib/constants'
-
-const SORT_OPTIONS = [
-  { value: 'newest', label: '最新' },
-  { value: 'oldest', label: '最早' },
-  { value: 'popular', label: '最多献花' },
-  { value: 'eulogies', label: '最多悼词' },
-  { value: 'candles', label: '最多蜡烛' },
-]
+import { useI18n } from '@/components/I18nProvider'
 
 export default function Home() {
+  const { t } = useI18n()
+
+  const SORT_OPTIONS = [
+    { value: 'newest', label: t.home.sortNewest },
+    { value: 'oldest', label: t.home.sortOldest },
+    { value: 'popular', label: t.home.sortPopular },
+    { value: 'eulogies', label: t.home.sortEulogies },
+    { value: 'candles', label: t.home.sortCandles },
+  ]
+
   const [tombstones, setTombstones] = useState<Tombstone[]>([])
   const [stats, setStats] = useState<GlobalStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -131,9 +134,9 @@ export default function Home() {
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <div className="flex items-center justify-center gap-4 mb-6">
               <Skull className="w-16 h-16 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-6xl font-bold gradient-text">代码火葬场</h1>
+              <h1 className="text-6xl font-bold gradient-text">{t.site.title}</h1>
             </div>
-            <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">每段代码都值得一个体面的葬礼</p>
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">{t.site.subtitle}</p>
           </motion.div>
         </div>
       </section>
@@ -144,10 +147,10 @@ export default function Home() {
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { icon: Skull, value: stats.total_tombstones, label: '代码已埋葬', color: 'text-purple-600 dark:text-purple-400' },
-                { icon: Flower2, value: stats.total_flowers, label: '鲜花已献上', color: 'text-pink-600 dark:text-pink-400' },
-                { icon: MessageSquare, value: stats.total_eulogies, label: '悼词已写下', color: 'text-blue-600 dark:text-blue-400' },
-                { icon: TrendingUp, value: stats.top_causes[0]?.cause ? CAUSE_OF_DEATH_LABELS[stats.top_causes[0].cause as keyof typeof CAUSE_OF_DEATH_LABELS]?.emoji : '💀', label: '最热门死因', color: 'text-green-600 dark:text-green-400' },
+                { icon: Skull, value: stats.total_tombstones, label: t.home.buried, color: 'text-purple-600 dark:text-purple-400' },
+                { icon: Flower2, value: stats.total_flowers, label: t.home.flowers, color: 'text-pink-600 dark:text-pink-400' },
+                { icon: MessageSquare, value: stats.total_eulogies, label: t.home.eulogiesWritten, color: 'text-blue-600 dark:text-blue-400' },
+                { icon: TrendingUp, value: stats.top_causes[0]?.cause ? CAUSE_OF_DEATH_LABELS[stats.top_causes[0].cause as keyof typeof CAUSE_OF_DEATH_LABELS]?.emoji : '💀', label: t.home.topCause, color: 'text-green-600 dark:text-green-400' },
               ].map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: i * 0.1 }} className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl p-4 text-center">
                   <item.icon className={`w-6 h-6 ${item.color} mx-auto mb-2`} />
@@ -171,7 +174,7 @@ export default function Home() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="搜索代码名称、描述..."
+                placeholder={t.home.search}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
               />
             </div>
@@ -196,7 +199,7 @@ export default function Home() {
               className="flex items-center gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:border-purple-500 transition-colors"
             >
               <Filter className="w-5 h-5" />
-              <span>筛选</span>
+              <span>{t.home.filter}</span>
               <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
             </button>
           </div>
@@ -211,13 +214,13 @@ export default function Home() {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">死因</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.home.cause}</label>
                   <select
                     value={selectedCause}
                     onChange={(e) => setSelectedCause(e.target.value)}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
                   >
-                    <option value="">全部死因</option>
+                    <option value="">{t.home.allCauses}</option>
                     {CAUSE_OPTIONS.map(cause => {
                       const info = CAUSE_OF_DEATH_LABELS[cause]
                       return <option key={cause} value={cause}>{info.emoji} {info.label}</option>
@@ -226,13 +229,13 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">编程语言</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.home.language}</label>
                   <select
                     value={selectedLanguage}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
                     className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
                   >
-                    <option value="">全部语言</option>
+                    <option value="">{t.home.allLanguages}</option>
                     {languages.filter(Boolean).map(lang => (
                       <option key={lang} value={lang}>{lang.charAt(0).toUpperCase() + lang.slice(1)}</option>
                     ))}
@@ -252,8 +255,8 @@ export default function Home() {
           ) : tombstones.length === 0 ? (
             <div className="text-center py-20">
               <Skull className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400 text-lg">没有找到墓碑</p>
-              <p className="text-gray-500 dark:text-gray-500 mt-2">试试其他搜索条件</p>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">{t.home.noTombstones}</p>
+              <p className="text-gray-500 dark:text-gray-500 mt-2">{t.home.tryOther}</p>
             </div>
           ) : (
             <>
@@ -273,10 +276,10 @@ export default function Home() {
                     {loadingMore ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        加载中...
+                        {t.home.loading}
                       </>
                     ) : (
-                      '加载更多'
+                      {t.home.loadMore}
                     )}
                   </button>
                 </div>

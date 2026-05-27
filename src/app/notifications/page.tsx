@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { Bell, Flower2, MessageSquare, Flame, Check, CheckCheck, LogIn } from 'lucide-react'
 import Link from 'next/link'
 import { showToast } from '@/components/Toast'
+import { useI18n } from '@/components/I18nProvider'
 
 interface Notification {
   id: string
@@ -18,16 +19,17 @@ interface Notification {
   created_at: string
 }
 
-const TYPE_CONFIG = {
-  flower: { icon: Flower2, label: '给你献了花 🌸', color: 'text-pink-500' },
-  eulogy: { icon: MessageSquare, label: '写了悼词 💬', color: 'text-blue-500' },
-  candle: { icon: Flame, label: '点了蜡烛 🕯️', color: 'text-yellow-500' },
-}
-
 export default function NotificationsPage() {
   const { data: session, status } = useSession()
+  const { t } = useI18n()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
+
+  const TYPE_CONFIG = {
+    flower: { icon: Flower2, label: t.notifications.flower, color: 'text-pink-500' },
+    eulogy: { icon: MessageSquare, label: t.notifications.eulogy, color: 'text-blue-500' },
+    candle: { icon: Flame, label: t.notifications.candle, color: 'text-yellow-500' },
+  }
 
   useEffect(() => {
     if (session) fetchNotifications()
@@ -52,7 +54,7 @@ export default function NotificationsPage() {
     try {
       await fetch('/api/notifications', { method: 'PATCH' })
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
-      showToast('全部已读 ✓', 'success')
+      showToast(t.notifications.markedRead, 'success')
     } catch (e) {
       console.error(e)
     }
@@ -61,12 +63,12 @@ export default function NotificationsPage() {
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime()
     const mins = Math.floor(diff / 60000)
-    if (mins < 1) return '刚刚'
-    if (mins < 60) return `${mins}分钟前`
+    if (mins < 1) return t.common.justNow
+    if (mins < 60) return `${mins}${t.common.minutesAgo}`
     const hours = Math.floor(mins / 60)
-    if (hours < 24) return `${hours}小时前`
+    if (hours < 24) return `${hours}${t.common.hoursAgo}`
     const days = Math.floor(hours / 24)
-    return `${days}天前`
+    return `${days}${t.common.daysAgo}`
   }
 
   const unreadCount = notifications.filter(n => !n.is_read).length
@@ -84,8 +86,8 @@ export default function NotificationsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Bell className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">请先登录查看通知</p>
-          <Link href="/" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">返回首页</Link>
+          <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">{t.notifications.loginFirst}</p>
+          <Link href="/" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">{t.common.backHome}</Link>
         </div>
       </div>
     )
@@ -98,9 +100,9 @@ export default function NotificationsPage() {
           <div className="flex items-center gap-3">
             <Bell className="w-8 h-8 text-purple-600 dark:text-purple-400" />
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">通知</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t.notifications.title}</h1>
               {unreadCount > 0 && (
-                <span className="text-sm text-gray-500">{unreadCount} 条未读</span>
+                <span className="text-sm text-gray-500">{unreadCount} {t.notifications.unread}</span>
               )}
             </div>
           </div>
@@ -110,7 +112,7 @@ export default function NotificationsPage() {
               className="flex items-center gap-2 px-3 py-2 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
             >
               <CheckCheck className="w-4 h-4" />
-              全部已读
+              {t.notifications.markAllRead}
             </button>
           )}
         </motion.div>
@@ -118,8 +120,8 @@ export default function NotificationsPage() {
         {notifications.length === 0 ? (
           <div className="text-center py-20">
             <Bell className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400 text-lg">没有通知</p>
-            <p className="text-gray-500 dark:text-gray-500 mt-2">当有人给你墓碑献花、写悼词时会通知你</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">{t.notifications.empty}</p>
+            <p className="text-gray-500 dark:text-gray-500 mt-2">{t.notifications.emptyDesc}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -151,7 +153,7 @@ export default function NotificationsPage() {
                           <Icon className={`w-4 h-4 ${config.color}`} />
                         </div>
                         <div className="text-sm text-purple-600 dark:text-purple-400 mt-1">
-                          {n.tombstone_name || '墓碑'}
+                          {n.tombstone_name}
                         </div>
                         <div className="text-xs text-gray-400 mt-1">
                           {timeAgo(n.created_at)}

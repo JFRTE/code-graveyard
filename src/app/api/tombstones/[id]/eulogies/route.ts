@@ -69,8 +69,19 @@ export async function POST(
       from_avatar_url: session.user.image || '',
       tombstone_id: params.id,
       tombstone_name: tombstone.code_name,
-    }).catch(() => {}) // Ignore if notifications table doesn't exist
+    }).catch(() => {})
   }
+
+  // Log activity
+  await supabase.from('activity_log').insert({
+    type: 'eulogy',
+    user_id: session.user.id,
+    username: session.user.name || 'Anonymous',
+    avatar_url: session.user.image || '',
+    tombstone_id: params.id,
+    tombstone_name: tombstone?.code_name || '',
+    detail: body.content?.substring(0, 100) || '',
+  }).catch(() => {})
 
   return NextResponse.json(data, { status: 201 })
 }

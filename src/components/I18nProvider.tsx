@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import zh from '@/i18n/zh.json'
 import en from '@/i18n/en.json'
 
@@ -27,12 +27,19 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = localStorage.getItem('lang') as Lang
     if (saved && translations[saved]) setLangState(saved)
+
+    const handler = (e: CustomEvent) => {
+      const newLang = e.detail as Lang
+      if (translations[newLang]) setLangState(newLang)
+    }
+    window.addEventListener('langChange', handler as EventListener)
+    return () => window.removeEventListener('langChange', handler as EventListener)
   }, [])
 
-  const setLang = (newLang: Lang) => {
+  const setLang = useCallback((newLang: Lang) => {
     setLangState(newLang)
     localStorage.setItem('lang', newLang)
-  }
+  }, [])
 
   return (
     <I18nContext.Provider value={{ lang, setLang, t: translations[lang] }}>

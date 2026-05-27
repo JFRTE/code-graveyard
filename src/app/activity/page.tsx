@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useI18n } from '@/components/I18nProvider'
 import { motion } from 'framer-motion'
 import { Activity, Skull, Flower2, MessageSquare, Flame, Calendar } from 'lucide-react'
 import Link from 'next/link'
@@ -13,17 +14,10 @@ interface ActivityItem {
   tombstone_id: string
   tombstone_name?: string
   created_at: string
-  detail?: string
-}
-
-const TYPE_CONFIG = {
-  tombstone: { icon: Skull, label: '埋葬了', color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30' },
-  flower: { icon: Flower2, label: '献花给', color: 'text-pink-500', bg: 'bg-pink-100 dark:bg-pink-900/30' },
-  eulogy: { icon: MessageSquare, label: '写悼词给', color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-  candle: { icon: Flame, label: '点蜡烛给', color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
 }
 
 export default function ActivityPage() {
+  const { t } = useI18n()
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -33,27 +27,11 @@ export default function ActivityPage() {
 
   const fetchActivities = async () => {
     try {
-      // Fetch recent tombstones, and combine with recent flowers/eulogies
-      const [tombRes] = await Promise.all([
-        fetch('/api/tombstones?limit=20'),
-      ])
-      const tombData = await tombRes.json()
-      const tombstones = tombData.tombstones || []
-
-      const items: ActivityItem[] = tombstones.map((t: any) => ({
-        id: t.id,
-        type: 'tombstone' as const,
-        username: t.username,
-        avatar_url: t.avatar_url,
-        tombstone_id: t.id,
-        tombstone_name: t.code_name,
-        created_at: t.created_at,
-      }))
-
-      // Sort by date
-      items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-
-      setActivities(items)
+      const res = await fetch('/api/activity')
+      if (res.ok) {
+        const data = await res.json()
+        setActivities(data.activities || [])
+      }
     } catch (e) {
       console.error(e)
     } finally {
@@ -64,13 +42,20 @@ export default function ActivityPage() {
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime()
     const mins = Math.floor(diff / 60000)
-    if (mins < 1) return '刚刚'
-    if (mins < 60) return `${mins}分钟前`
+    if (mins < 1) return t.common.justNow
+    if (mins < 60) return `${mins}${t.common.minutesAgo}`
     const hours = Math.floor(mins / 60)
-    if (hours < 24) return `${hours}小时前`
+    if (hours < 24) return `${hours}${t.common.hoursAgo}`
     const days = Math.floor(hours / 24)
-    if (days < 30) return `${days}天前`
-    return `${Math.floor(days / 30)}个月前`
+    if (days < 30) return `${days}${t.common.daysAgo}`
+    return `${Math.floor(days / 30)}${t.common.monthsAgo}`
+  }
+
+  const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string; bg: string }> = {
+    tombstone: { icon: Skull, label: t.activity.buried, color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+    flower: { icon: Flower2, label: t.activity.flowered, color: 'text-pink-500', bg: 'bg-pink-100 dark:bg-pink-900/30' },
+    eulogy: { icon: MessageSquare, label: t.activity.eulogied, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+    candle: { icon: Flame, label: t.activity.candled, color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
   }
 
   if (loading) {
@@ -86,23 +71,22 @@ export default function ActivityPage() {
       <div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
           <Activity className="w-12 h-12 text-purple-600 dark:text-purple-400 mx-auto mb-4" />
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">活动时间线</h1>
-          <p className="text-gray-600 dark:text-gray-400">墓地里的最新动态 🕊️</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{t.activity.title}</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t.activity.subtitle}</p>
         </motion.div>
 
         {activities.length === 0 ? (
           <div className="text-center py-20">
             <Skull className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">还没有任何活动</p>
+            <p className="text-gray-600 dark:text-gray-400">{t.activity.empty}</p>
           </div>
         ) : (
           <div className="relative">
-            {/* Timeline line */}
             <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-500 via-pink-500 to-transparent" />
 
             <div className="space-y-6">
               {activities.map((item, i) => {
-                const config = TYPE_CONFIG[item.type]
+                const config = TYPE_CONFIG[item.type] || TYPE_CONFIG.tombstone
                 const Icon = config.icon
 
                 return (
@@ -113,15 +97,13 @@ export default function ActivityPage() {
                     transition={{ delay: i * 0.05 }}
                     className="relative pl-20"
                   >
-                    {/* Icon */}
                     <div className={`absolute left-4 w-9 h-9 rounded-full ${config.bg} flex items-center justify-center z-10`}>
                       <Icon className={`w-5 h-5 ${config.color}`} />
                     </div>
 
-                    {/* Content */}
                     <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
                       <div className="flex items-center gap-2 mb-1">
-                        <img src={item.avatar_url} alt="" className="w-6 h-6 rounded-full" />
+                        <img src={item.avatar_url || '/icons/icon.svg'} alt="" className="w-6 h-6 rounded-full" loading="lazy" />
                         <span className="font-medium text-gray-900 dark:text-white text-sm">{item.username}</span>
                         <span className="text-gray-500 dark:text-gray-400 text-sm">{config.label}</span>
                         <Link href={`/tombstone/${item.tombstone_id}`} className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300 text-sm font-medium">

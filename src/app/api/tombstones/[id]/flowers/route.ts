@@ -79,5 +79,15 @@ export async function POST(
     }).catch(() => {})
   }
 
+  // Log activity
+  await supabase.from('activity_log').insert({
+    type: 'flower',
+    user_id: session.user.id,
+    username: session.user.name || 'Anonymous',
+    avatar_url: session.user.image || '',
+    tombstone_id: params.id,
+    tombstone_name: tombstone?.code_name || '',
+  }).catch(() => {})
+
   return NextResponse.json(data, { status: 201 })
 }

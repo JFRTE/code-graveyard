@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import ToastContainer from "@/components/Toast";
 import Particles from "@/components/Particles";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { I18nProvider } from "@/components/I18nProvider";
 
 export const metadata: Metadata = {
   title: "代码火葬场 - Code Graveyard",
@@ -46,13 +47,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
         <ThemeProvider>
           <SessionProvider>
-            <Particles />
-            <Navbar />
-            <main className="pt-16 relative z-[2]">
-              <ErrorBoundary>{children}</ErrorBoundary>
-            </main>
-            <div className="fog-effect" />
-            <ToastContainer />
+            <I18nProvider>
+              <Particles />
+              <Navbar />
+              <main className="pt-16 relative z-[2]">
+                <ErrorBoundary>{children}</ErrorBoundary>
+              </main>
+              <div className="fog-effect" />
+              <ToastContainer />
+            </I18nProvider>
           </SessionProvider>
         </ThemeProvider>
       </body>

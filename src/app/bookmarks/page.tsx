@@ -7,9 +7,11 @@ import { Bookmark, LogIn } from 'lucide-react'
 import Link from 'next/link'
 import TombstoneCard from '@/components/TombstoneCard'
 import { Tombstone } from '@/types'
+import { useI18n } from '@/components/I18nProvider'
 
 export default function BookmarksPage() {
   const { data: session, status } = useSession()
+  const { t } = useI18n()
   const [tombstones, setTombstones] = useState<Tombstone[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -45,8 +47,8 @@ export default function BookmarksPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Bookmark className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">请先登录查看收藏</p>
-          <Link href="/" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">返回首页</Link>
+          <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">{t.bookmarks.loginFirst}</p>
+          <Link href="/" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">{t.common.backHome}</Link>
         </div>
       </div>
     )
@@ -57,15 +59,15 @@ export default function BookmarksPage() {
       <div className="max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
           <Bookmark className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">我的收藏</h1>
-          <p className="text-gray-600 dark:text-gray-400">收藏的墓碑 ❤️</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{t.bookmarks.title}</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t.bookmarks.subtitle}</p>
         </motion.div>
 
         {tombstones.length === 0 ? (
           <div className="text-center py-20">
             <Bookmark className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400 text-lg">还没有收藏</p>
-            <p className="text-gray-500 dark:text-gray-500 mt-2">在墓碑详情页点击收藏按钮</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">{t.bookmarks.empty}</p>
+            <p className="text-gray-500 dark:text-gray-500 mt-2">{t.bookmarks.emptyDesc}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
